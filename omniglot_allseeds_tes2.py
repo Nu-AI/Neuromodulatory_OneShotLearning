@@ -2,7 +2,7 @@
 
 
 
-import pdb 
+import pdb
 import torch
 import torch.nn as nn
 from torch.autograd import Variable
@@ -60,7 +60,7 @@ ttype = torch.cuda.FloatTensor;
 # Generate the full list of inputs, labels, and the target label for an episode
 def generateInputsLabelsAndTarget(params, imagedata, test=False):
 
-    inputT = np.zeros((params['nbsteps'], 1, 1, params['imagesize'], params['imagesize']))    #inputTensor, initially in numpy format... Note dimensions: number of steps x batchsize (always 1) x NbChannels (also 1) x h x w 
+    inputT = np.zeros((params['nbsteps'], 1, 1, params['imagesize'], params['imagesize']))    #inputTensor, initially in numpy format... Note dimensions: number of steps x batchsize (always 1) x NbChannels (also 1) x h x w
     labelT = np.zeros((params['nbsteps'], 1, params['nbclasses']))      #labelTensor, initially in numpy format...
 
     patterns=[]
@@ -107,7 +107,7 @@ def generateInputsLabelsAndTarget(params, imagedata, test=False):
     for nn in range(params['prestimetest']):
         inputT[location][0][0][:][:] = p[:][:]
         location += 1
-        
+
     # Generating the test label
     testlabel = np.zeros(params['nbclasses'])
     testlabel[np.where(unpermcats == testcat)] = 1
@@ -131,8 +131,9 @@ def train(paramdict=None):
     params.update(defaultParams)
     if paramdict:
         params.update(paramdict)
-    
+
     #pdb.set_trace()
+
 
     print("Loading Omniglot data...")
     imagedata = []
@@ -143,8 +144,8 @@ def train(paramdict=None):
     #                'C:\\Users\Anurag\PycharmProjects\Thesis_codes\omniglot-master\python\images_evaluation'):
     # for basedir in ('C:\\Users\Anurag\PycharmProjects\Thesis_codes\omniglot-master\python\images_background/',
     #                 'C:\\Users\Anurag\PycharmProjects\Thesis_codes\omniglot-master\python\images_evaluation/'):
-    for basedir in ('C:\\Users\Anurag\Downloads\omniglot-master\omniglot-master\python\images_background/',
-                    'C:\\Users\Anurag\Downloads\omniglot-master\omniglot-master\python\images_evaluation/'):
+    for basedir in ('./omniglot_dataset/omniglot/python/images_background/',
+                    './omniglot_dataset/omniglot/python/images_evaluation/'):
         alphabetdirs = glob.glob(basedir+'*')
         print(alphabetdirs[:4],"meoww")
         for alphabetdir in alphabetdirs:
@@ -170,7 +171,7 @@ def train(paramdict=None):
 
 
     successrates = []
-    totaliter = 0 
+    totaliter = 0
     totalmistakes = 0
 
     for myseed in range(10):
@@ -178,35 +179,35 @@ def train(paramdict=None):
 
         #suffix="_Wactiv_tanh_alpha_free_flare_0_gamma_0.75_imgsize_31_ipd_0_lr_3e-05_nbclasses_5_nbf_64_nbiter_5000000_nbshots_1_prestime_1_prestimetest_1_rule_oja_steplr_1000000.0_rngseed_"+str(myseed)
         suffix="_Wactiv_tanh_alpha_free_flare_0_gamma_0.666_imgsize_31_ipd_0_lr_3e-05_nbclasses_5_nbf_64_nbiter_5000000_nbshots_1_prestime_1_prestimetest_1_rule_oja_steplr_1000000.0_rngseed_"+str(myseed)+"_5000000"
-        with open('./tmp/results'+suffix+'.dat', 'rb') as fo:
+        with open('./results/results'+suffix+'.dat', 'rb') as fo:
             tmpw = torch.nn.Parameter(torch.from_numpy(pickle.load(fo)).type(ttype))
             tmpalpha = torch.nn.Parameter(torch.from_numpy(pickle.load(fo)).type(ttype))
             tmpeta = torch.nn.Parameter(torch.from_numpy(pickle.load(fo)).type(ttype))
             tmplss = pickle.load(fo)
             paramdictLoadedFromFile = pickle.load(fo)
-        
+
         params.update(paramdictLoadedFromFile)
 
-        
+
         print("Initializing network")
         net = Network(params)
         #net.cuda()
-        
+
         print ("Size of all optimized parameters:", [x.size() for x in net.parameters()])
         allsizes = [torch.numel(x.data.cpu()) for x in net.parameters()]
         print ("Size (numel) of all optimized elements:", allsizes)
         print ("Total size (numel) of all optimized elements:", sum(allsizes))
 
-        
+
         print("Passed params: ", params)
         print(platform.uname())
         sys.stdout.flush()
         params['nbsteps'] = params['nbshots'] * ((params['prestime'] + params['interpresdelay']) * params['nbclasses']) + params['prestimetest']  # Total number of steps per episode
-        
-        net.load_state_dict(torch.load('./tmp/torchmodel'+suffix + '.txt'))
-        
-        
-        
+
+        net.load_state_dict(torch.load('./torchmodels/torchmodel'+suffix + '.txt'))
+
+
+
         params['nbiter'] = 100
 
 
@@ -224,7 +225,7 @@ def train(paramdict=None):
         nbmistakes = 0
 
         for numiter in range(params['nbiter']):
-            
+
             hebb = net.initialZeroHebb()
             #optimizer.zero_grad()
 
@@ -314,4 +315,3 @@ def main(nbclasses, nbshots, prestime, prestimetest, interpresdelay, nbiter, lea
 if __name__ == "__main__":
     #train()
     main()
-
