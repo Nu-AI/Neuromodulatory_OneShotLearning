@@ -192,7 +192,8 @@ def train(paramdict=None):
         print("Initializing network")
         net = Network(params)
         #net.cuda()
-
+        params_conv = sum(p.numel() for p in net.parameters())
+        print ("The number of params ", params_conv, "***********************************\n")
         print ("Size of all optimized parameters:", [x.size() for x in net.parameters()])
         allsizes = [torch.numel(x.data.cpu()) for x in net.parameters()]
         print ("Size (numel) of all optimized elements:", allsizes)
