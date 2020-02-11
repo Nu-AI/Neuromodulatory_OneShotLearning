@@ -22,6 +22,12 @@ import os
 import platform
 
 
+import qtorch
+from qtorch.quant import fixed_point_quantize
+
+#from qtorch.optim import OptimL
+
+
 import matplotlib.pyplot as plt
 import glob
 
@@ -46,7 +52,8 @@ defaultParams = {
     'nbiter': 10000000,
     'learningrate': 1e-5,
     'print_every': 10,
-    'rngseed':0
+    'rngseed':0,
+    'quantization': 0
 }
 NBTESTCLASSES = 100
 
@@ -183,11 +190,19 @@ def train(paramdict=None):
             tmpw = torch.nn.Parameter(torch.from_numpy(pickle.load(fo)).type(ttype))
             tmpalpha = torch.nn.Parameter(torch.from_numpy(pickle.load(fo)).type(ttype))
             tmpeta = torch.nn.Parameter(torch.from_numpy(pickle.load(fo)).type(ttype))
+
             tmplss = pickle.load(fo)
             paramdictLoadedFromFile = pickle.load(fo)
+            if (params['quantization']):
+                    qtmpw = fixed_point_quantize(tmpw, 16,14)
+                    qtmpalpha = fixed_point_quantize(tmpalpha, 16, 14)
+                    qtmpeta  = fixed_point_quantize(tmpeta, 16, 14)
+                    qparamdictLoadFromFile = fixed_point_quantize(paramdictLoadedFromFile, 16, 14)
+
 
         params.update(paramdictLoadedFromFile)
-
+        if (params['quantization']):
+            params.update(qparamdictLoaddFromFile)
 
         print("Initializing network")
         net = Network(params)
@@ -208,6 +223,7 @@ def train(paramdict=None):
         net.load_state_dict(torch.load('./torchmodels/torchmodel'+suffix + '.txt'))
 
 
+        #torch.quantization.quantize_dynamic(net.cpu(),dtype = torch.qint8 )
 
         params['nbiter'] = 100
 
@@ -243,6 +259,9 @@ def train(paramdict=None):
             criterion = torch.nn.BCELoss()
             loss = criterion(y[0], Variable(target, requires_grad=False))
 
+            if params['quantization']:
+                qy = fixed_point_quantize(y, 16, 14)
+                qhebb = fixed_point_quantize(hebb, 16, 14)
             #if is_test_step == False:
             #    loss.backward()
             #    optimizer.step()
