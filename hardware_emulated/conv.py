@@ -18,7 +18,6 @@ l1_filter[0, :, :] = np.array([[[-1, 0, 1],
 l1_filter[1, :, :] = np.array([[[1,   1,  1],
                                 [0,   0,  0],
                                [-1, -1, -1]]])
-
 l2_filter =  np.zeros((2,2,3,3))
 l2_filter[0,:,:,:] = l1_filter
 l2_filter[1,:,:,:] = l1_filter
@@ -47,14 +46,15 @@ class conv_3_3:
 
         #Starting the convolutions
         for ftr in range(self.nbfilters):
-            print ("Enteredt thhe looop *******************", self.nbfilters, ftr)
+            print ("Entered thhe looop *******************", self.nbfilters, ftr)
             temp_filter = filter[ftr,:]
             print (temp_filter.shape)
-            if (len(temp_filter.shape)>2):
-                conv_map = self.conv_perform(self.input_map[:,:,0], filter[:,:,0])
-                for channel in range(1, filter.shape[-1]):
-                    conv_map  = conv_map + self.conv_perform(self.input_map[:,:,channel], filter[:,:,channel])
-
+            if (len(self.input_map.shape)>2):
+                print ("Larger map shape", self.input_map.shape)
+                #reshaped_filter = np.reshape(filter, (3,3,2))
+                conv_map = self.conv_perform(self.input_map[:,:,0], temp_filter[0,:,:])
+                for channel in range(1, self.input_map.shape[-1]):
+                    conv_map  = conv_map + self.conv_perform(self.input_map[:,:,channel], temp_filter[channel,:,:])
             else:
                 conv_map = self.conv_perform(self.input_map,temp_filter)
             temp_feature_map[:,:,ftr] = conv_map
@@ -70,18 +70,18 @@ class conv_3_3:
         feature_map_size = int((input_map.shape[1] - self.kernel_size) / (self.stride)) + 1
         feature_map = np.zeros((feature_map_size, feature_map_size))
         #print (feature_map_size, " *******************")
-        if(len(input_map.shape)> 2 ):
-            input_map_size_row = input_map.shape[0]
-            input_map_size_col = input_map.shape[1]
-        else:
-            input_map_size_row = input_map.shape[0]
-            input_map_size_col = input_map.shape[1]
-
+        # if(len(input_map.shape)> 2 ):
+        #     input_map_size_row = input_map.shape[0]
+        #     input_map_size_col = input_map.shape[1]
+        # else:
+        input_map_size_row = input_map.shape[0]
+        input_map_size_col = input_map.shape[1]
         for t in range(0,input_map_size_col - 1, self.stride):
 
             for k in range (0, input_map_size_row-1, self.stride):
                 for i in range(self.kernel_size):
                     for j in range (self.kernel_size):
+                        #Refactor this line to work for varied input shapes
                         point_wise_mult += input_map[i][j] * filter[i][j]
 
                 feature_map[temp_counter_1][temp_counter_2] = point_wise_mult
