@@ -5,6 +5,8 @@ import decimal
 
 import skimage.data
 from skimage.transform import rescale, resize
+
+#Sample images and filters for testing the layer
 image = skimage.data.chelsea()
 img  = skimage.color.rgb2gray(image)
 l1_filter = np.zeros((2,3,3))
@@ -22,7 +24,14 @@ l2_filter =  np.zeros((2,2,3,3))
 l2_filter[0,:,:,:] = l1_filter
 l2_filter[1,:,:,:] = l1_filter
 
+####################################################################
+# This class will take in the following arguments with the input   #
+# image being the input_map, the kernel size,  the stride and  the #
+# number of filters for that particular layer.                     #
+####################################################################
+
 class conv_3_3:
+
 
     def __init__(self, input_map, kernel_size, stride, nbfilters):
         self.nbfilters = nbfilters
@@ -31,15 +40,14 @@ class conv_3_3:
         self.stride = stride
         self.filter_array = np.random.randn(nbfilters, 3, 3) / 9
 
+    ###############################################################
+    # Convolution operation handler. Regulates the number of      #
+    # convolutions taking place and is responsible for generating #
+    # the output feature maps                                     #
+    ###############################################################
 
     def forward(self, filter):
-        # if (len(filter.shape)>3):
-        #     if (self.input_map.shape[-1] != filter.shape[-1]):
-        #         print ("The shapes must match for the image and the filter")
-        #         sys.exit()
-        # if filter.shape[1] != filter.shape[2]:
-        #     print ("The filter must have the same dimensions")
-        #     sys.exit()
+
 
         feature_map_size = int((self.input_map.shape[1] - self.kernel_size) / (self.stride)) + 1
         temp_feature_map = np.zeros((feature_map_size, feature_map_size, self.nbfilters))
@@ -61,6 +69,13 @@ class conv_3_3:
 
         return temp_feature_map
 
+    ###############################################################
+    # This method performs the actual convolutions. The selected  #
+    # input map and the filters are sent into this function as    #
+    # arguments and the output is calculated and returned as the  #
+    # individual feature maps.                                    #
+    ###############################################################
+
 
     def conv_perform(self, input_map, filter):
 
@@ -69,11 +84,7 @@ class conv_3_3:
         temp_counter_2  = 0
         feature_map_size = int((input_map.shape[1] - self.kernel_size) / (self.stride)) + 1
         feature_map = np.zeros((feature_map_size, feature_map_size))
-        #print (feature_map_size, " *******************")
-        # if(len(input_map.shape)> 2 ):
-        #     input_map_size_row = input_map.shape[0]
-        #     input_map_size_col = input_map.shape[1]
-        # else:
+
         input_map_size_row = input_map.shape[0]
         input_map_size_col = input_map.shape[1]
         for t in range(0,input_map_size_col - 1, self.stride):
@@ -81,7 +92,7 @@ class conv_3_3:
             for k in range (0, input_map_size_row-1, self.stride):
                 for i in range(self.kernel_size):
                     for j in range (self.kernel_size):
-                        #Refactor this line to work for varied input shapes
+
                         point_wise_mult += input_map[i][j] * filter[i][j]
 
                 feature_map[temp_counter_1][temp_counter_2] = point_wise_mult
