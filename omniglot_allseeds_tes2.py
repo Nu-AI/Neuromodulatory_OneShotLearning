@@ -22,8 +22,8 @@ import os
 import platform
 
 
-import qtorch
-from qtorch.quant import fixed_point_quantize
+# import qtorch
+# from qtorch.quant import fixed_point_quantize
 
 #from qtorch.optim import OptimL
 
@@ -181,7 +181,7 @@ def train(paramdict=None):
     totaliter = 0
     totalmistakes = 0
 
-    for myseed in range(1):
+    for myseed in range(2,8,1):
 
 
         #suffix="_Wactiv_tanh_alpha_free_flare_0_gamma_0.75_imgsize_31_ipd_0_lr_3e-05_nbclasses_5_nbf_64_nbiter_5000000_nbshots_1_prestime_1_prestimetest_1_rule_oja_steplr_1000000.0_rngseed_"+str(myseed)
@@ -193,16 +193,16 @@ def train(paramdict=None):
 
             tmplss = pickle.load(fo)
             paramdictLoadedFromFile = pickle.load(fo)
-            if (params['quantization']):
-                    qtmpw = fixed_point_quantize(tmpw, 16,14)
-                    qtmpalpha = fixed_point_quantize(tmpalpha, 16, 14)
-                    qtmpeta  = fixed_point_quantize(tmpeta, 16, 14)
-                    qparamdictLoadFromFile = fixed_point_quantize(paramdictLoadedFromFile, 16, 14)
+            # if (params['quantization']):
+            #         qtmpw = fixed_point_quantize(tmpw, 16,14)
+            #         qtmpalpha = fixed_point_quantize(tmpalpha, 16, 14)
+            #         qtmpeta  = fixed_point_quantize(tmpeta, 16, 14)
+            #         qparamdictLoadFromFile = fixed_point_quantize(paramdictLoadedFromFile, 16, 14)
 
 
         params.update(paramdictLoadedFromFile)
-        if (params['quantization']):
-            params.update(qparamdictLoaddFromFile)
+        # if (params['quantization']):
+        #     params.update(qparamdictLoaddFromFile)
 
         print("Initializing network")
         net = Network(params)
