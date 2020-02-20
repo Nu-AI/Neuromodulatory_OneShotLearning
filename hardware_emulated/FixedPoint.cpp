@@ -1,4 +1,4 @@
-// The Code For Fixed Point Function and the rounding mode is round to nearest and trancate for overflow and underflow 
+// The Code For Fixed Point Function and the rounding mode is round to nearest and trancate for overflow and underflow
 //
 
 #include <stdint.h>
@@ -15,27 +15,34 @@ int32_t Fixed_Mul(float input1, float input2, int fraction, int integer);
 float Fixed_ACC(float Product[], int shape);
 
 
-int main()
-{
-    float number1=0.4;
-    float number2=0.6;
-    float number3=0.5;
-    float number4=0.7;
-    float Result1= 0.0;
-    float Result2= 0.0;
-    float Result3= 0.0;
-    float Product[2];
-    Result1=Fixed_Mul(number1,number2,1,10);
-    cout<< Result1 << endl;
-    Result2=Fixed_Mul(number3,number4,1,10);
-    cout<< Result2 << endl;
-    Product[0]= Result1;
-    Product[1]=Result2;
-    Result3= Fixed_ACC(Product, 2);
-    cout<< Result3<< endl;
-    return 0;
-
-}
+// int main()
+// {
+//     float number1=0.4;
+//     float number2=0.6;
+//     float number3=0.5;
+//     float number4=0.7;
+//     float Result1= 0.0;
+//     float Result2= 0.0;
+//     float Result3= 0.0;
+//     float float_convert;
+//     float Product[2];
+//     Result1=Fixed_Mul(number1,number2,1,10);
+//     cout<< Result1 << endl;
+//     Result2=Fixed_Mul(number3,number4,1,10);
+//     cout<< Result2 << endl;
+//     Product[0]= Result1;
+//     Product[1]=Result2;
+//     Result3= Fixed_ACC(Product, 2);
+//     int temp_result;
+//     temp_result = Float_to_Fixed(number4,1,10);
+//     cout<< temp_result<< endl;
+//     cout << "the temp result is above" << endl;
+//     float_convert = Fixed_to_Float(temp_result, 1, 10);
+//     cout << float_convert<< endl;
+//     cout<< Result3 << endl;
+//
+//     return 0;
+// }
 
 int32_t Float_to_Fixed(float input, int integer, int fraction)
 {
@@ -44,7 +51,7 @@ int32_t Float_to_Fixed(float input, int integer, int fraction)
     float number_round = 0.0;
     float number_int = 0.0;
     float number_ovf = 0.0;
-    int bit_number= integer + fraction;
+    int bit_number = integer + fraction;
     number= input;
     //cout<< number << endl;
     number_shift= number * pow(2.0, fraction);
@@ -119,7 +126,3 @@ float Fixed_ACC(float Product[], int shape)
     //MAC_Result2 = Fixed_to_Float(temp, integer, fraction);
     return MAC_Result1;
 }
-
-
-
-
