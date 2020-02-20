@@ -181,7 +181,7 @@ def train(paramdict=None):
     totaliter = 0
     totalmistakes = 0
 
-    for myseed in range(2,8,1):
+    for myseed in range(5,6,1):
 
 
         #suffix="_Wactiv_tanh_alpha_free_flare_0_gamma_0.75_imgsize_31_ipd_0_lr_3e-05_nbclasses_5_nbf_64_nbiter_5000000_nbshots_1_prestime_1_prestimetest_1_rule_oja_steplr_1000000.0_rngseed_"+str(myseed)
