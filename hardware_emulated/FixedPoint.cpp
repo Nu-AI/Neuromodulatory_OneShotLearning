@@ -59,7 +59,7 @@ extern "C"
     //cout<< number_shift<<endl;
     number_round= round(number_shift);
     //cout<< number_round<< endl;
-    number_int = int16_t(number_round);
+    number_int = int32_t(number_round);
     number_ovf=  OverflowCorrection(number_int, bit_number);
     return number_ovf;
 }
@@ -113,13 +113,14 @@ int32_t Fixed_Mul(float input1, float input2, int integer, int fraction)
     //cout<< Fixed_number2<<endl;
     multiply1 = Fixed_number1 * Fixed_number2;
     //cout<< multiply1<<endl;
-    //multiply = Fixed_to_Float(multiply1, integer, fraction);
+    //multiply = Fixed_to_Float(multiply1, fraction);
     //cout<< multiply<< endl;
     return multiply1;
 }
 }
 
-extern "C"{
+extern "C"
+{
 float Fixed_ACC(float *Product, int shape)
 {
     int integer= 1;
