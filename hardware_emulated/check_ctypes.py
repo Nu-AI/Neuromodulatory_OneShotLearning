@@ -16,12 +16,12 @@ def Float_to_Fixed(number, integer, fraction):
     results = Fixedlib.Float_to_Fixed(number, integer, fraction)
     return(results)
 
-__main__
-try:
-    libc = ctypes.CDLL(path_libc)
-except OSError:
-    print ('Cannot load the library')
-    sys.exit()
+
+# try:
+#     libc = ctypes.CDLL(path_libc)
+# except OSError:
+#     print ('Cannot load the library')
+#     sys.exit()
 #Convlib = cdll.LoadLibrary("ConvFC.so")
 #Convlib.main()
 float_to_fixed = Float_to_Fixed(0.7,1,10)
