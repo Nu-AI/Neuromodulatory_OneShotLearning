@@ -21,8 +21,8 @@ Fixedlib.Fixed_ACC.restype = ctypes.c_float
 Fixedlib.Fixed_ACC.argtypes = (np.ctypeslib.ndpointer(dtype=np.float32), ctypes.c_int)
 
 def Float_to_Fixed(number, integer, fraction):
-    results = Fixedlib.Float_to_Fixed(number, integer, fraction)
-    return(results)
+    result = Fixedlib.Float_to_Fixed(number, integer, fraction)
+    return result
 
 def Fixed_to_Float(number, fraction):
     result = Fixedlib.Fixed_to_Float(number, fraction)
