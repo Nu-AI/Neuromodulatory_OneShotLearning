@@ -6,6 +6,42 @@ import decimal
 import skimage.data
 from skimage.transform import rescale, resize
 
+from ctypes import *
+
+##################################################################
+# The next section involves setting up the C++ wrappers for the  #
+# given convolutional operations in fixed point.                 #
+##################################################################
+Fixedlib = ctypes.CDLL("FixedPoint.so")
+
+Fixedlib.Float_to_Fixed.restype = ctypes.c_int32
+Fixedlib.Float_to_Fixed.argtypes = (ctypes.c_float, ctypes.c_int, ctypes.c_int)
+
+Fixedlib.Fixed_to_Float.restype = ctypes.c_float
+Fixedlib.Fixed_to_Float.argtypes = (ctypes.c_float, ctypes.c_int)
+
+Fixedlib.Fixed_Mul.restype = ctypes.c_int32
+Fixedlib.Fixed_Mul.argtypes = (ctypes.c_float, ctypes.c_float, ctypes.c_int, ctypes.c_int)
+
+Fixedlib.Fixed_ACC.restype = ctypes.c_float
+Fixedlib.Fixed_ACC.argtypes = (np.ctypeslib.ndpointer(dtype=np.float32), ctypes.c_int)
+
+def Float_to_Fixed(number, integer, fraction):
+    results = Fixedlib.Float_to_Fixed(number, integer, fraction)
+    return(results)
+
+def Fixed_to_Float(number, fraction):
+    result = Fixedlib.Fixed_to_Float(number, fraction)
+    return result
+
+def Fixed_Mul(input1, input2, integer, fraction):
+    result = Fixedlib.Fixed_Mul(input1, input2, integer, fraction)
+    return result
+
+def Fixed_ACC(Product, shape):
+    result = Fixedlib.Fixed_ACC(Product, shape)
+    return result
+
 #Sample images and filters for testing the layer
 image = skimage.data.chelsea()
 img  = skimage.color.rgb2gray(image)
@@ -32,7 +68,6 @@ l2_filter[1,:,:,:] = l1_filter
 
 class conv_3_3:
 
-
     def __init__(self, input_map, kernel_size, stride, nbfilters):
         self.nbfilters = nbfilters
         self.input_map = input_map
@@ -47,7 +82,6 @@ class conv_3_3:
     ###############################################################
 
     def forward(self, filter):
-
 
         feature_map_size = int((self.input_map.shape[1] - self.kernel_size) / (self.stride)) + 1
         temp_feature_map = np.zeros((feature_map_size, feature_map_size, self.nbfilters))
@@ -76,7 +110,6 @@ class conv_3_3:
     # individual feature maps.                                    #
     ###############################################################
 
-
     def conv_perform(self, input_map, filter):
 
         point_wise_mult = 0
@@ -88,13 +121,11 @@ class conv_3_3:
         input_map_size_row = input_map.shape[0]
         input_map_size_col = input_map.shape[1]
         for t in range(0,input_map_size_col - 1, self.stride):
-
             for k in range (0, input_map_size_row-1, self.stride):
                 for i in range(self.kernel_size):
                     for j in range (self.kernel_size):
-
                         point_wise_mult += input_map[i][j] * filter[i][j]
-
+                        point_wise_mult += Fixed_Mul(input_map[i][j],filter[i][j],1,10)                        
                 feature_map[temp_counter_1][temp_counter_2] = point_wise_mult
                 temp_counter_1 +=1
             temp_counter_2 += 1
@@ -103,7 +134,7 @@ class conv_3_3:
 
 c = conv_3_3(img, 3,2,2)
 feature_maps = c.forward(l1_filter)
-print (feature_maps.shape)#, feature_maps)
+print (feature_maps.shape)
 d  = conv_3_3(feature_maps, 3,2,2)
 new_feature_maps= d.forward(l2_filter)
 print(new_feature_maps.shape)
