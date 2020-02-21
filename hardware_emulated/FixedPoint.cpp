@@ -7,7 +7,7 @@
 
 using namespace std;
 
-int32_t Float_to_Fixed(float number, int integer, int fraction);
+//int32_t Float_to_Fixed(float number, int integer, int fraction);
 int32_t OverflowCorrection(int number,int bit_number);
 float Fixed_to_Float(float input, int integer, int Frcation);
 float Fixed_to_Float2(float input, int integer, int Frcation);
@@ -44,7 +44,8 @@ float Fixed_ACC(float Product[], int shape);
 //     return 0;
 // }
 
-int32_t Float_to_Fixed(float input, int integer, int fraction)
+extern "C"
+{int32_t Float_to_Fixed(float input, int integer, int fraction)
 {
     float number = 0.0;
     float number_shift = 0.0;
@@ -62,7 +63,7 @@ int32_t Float_to_Fixed(float input, int integer, int fraction)
     number_ovf=  OverflowCorrection(number_int, bit_number);
     return number_ovf;
 }
-
+}
 int32_t OverflowCorrection(int number,int bit_number)
 {
     int Max_number= 0;
