@@ -112,7 +112,7 @@ int32_t Fixed_Mul(float input1, float input2, int integer, int fraction)
     Fixed_number2 = Float_to_Fixed(input2, integer, fraction);
     //cout<< Fixed_number2<<endl;
     multiply1 = Fixed_number1 * Fixed_number2;
-    cout<< multiply1<<endl;
+    //cout<< multiply1<<endl;
     //multiply = Fixed_to_Float(multiply1, integer, fraction);
     //cout<< multiply<< endl;
     return multiply1;
