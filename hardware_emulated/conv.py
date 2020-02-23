@@ -55,6 +55,9 @@ image = skimage.data.chelsea()
 img  = skimage.color.rgb2gray(image)
 l1_filter = np.zeros((2,3,3))
 img = skimage.transform.resize(img, (31,31))
+img = img/np.linalg.norm(img)
+norm_image = map(lambda row:row/np.linalg.norm(row), img)
+print (norm_image, img, "This is the norm image")
 print(img.shape, " %%%%%%%%%")
 
 l1_filter[0, :, :] = np.array([[[-1, 0, 1],
@@ -127,7 +130,6 @@ class conv_3_3:
         feature_map_size = int((input_map.shape[1] - self.kernel_size) / (self.stride)) + 1
         feature_map = np.zeros((feature_map_size, feature_map_size))
 
-
         #Setting up in fixed and floating point
         point_wise_mult_fixed = 0
         val_in_float = 0.0
@@ -137,23 +139,23 @@ class conv_3_3:
 
         input_map_size_row = input_map.shape[0]
         input_map_size_col = input_map.shape[1]
-        for t in range(0,input_map_size_col - 1, self.stride):
+        for t in range(0, input_map_size_col - 1, self.stride):
             for k in range (0, input_map_size_row-1, self.stride):
-                for i in range(self.kernel_size):
+                for i in range (self.kernel_size):
                     for j in range (self.kernel_size):
                         point_wise_mult += input_map[i][j] * filter[i][j]
-                        point_wise_mult_fixed += Fixed_Mul(input_map[i][j],filter[i][j],1,10)
-                        val_in_float = Fixed_to_Float2(point_wise_mult_fixed, 16)
+                        point_wise_mult_fixed += Fixed_Mul(input_map[i][j],filter[i][j],2,10)
+                        val_in_float = Fixed_to_Float2(point_wise_mult_fixed, 10)
                 feature_map[temp_counter_1][temp_counter_2] = point_wise_mult
                 feature_map_fixed[temp_counter_1][temp_counter_2] = point_wise_mult_fixed
                 feature_map_float[temp_counter_1][temp_counter_2] = val_in_float
-                temp_counter_1 +=1
+                temp_counter_1 += 1
             temp_counter_2 += 1
             temp_counter_1 = 0
         temp_array = feature_map - feature_map_float
-        #print (temp_array, "the difference in precision values")
-        #print (feature_map_fixed, "this is the feature map in fixed point")
-        print (feature_map_float, "this is the feature map in float")
+        print (temp_array, "the difference in precision values")
+        #print (feature_map, "this is the feature map in fixed point")
+        #print (feature_map_float, "this is the feature map in float")
         return feature_map
 
 
