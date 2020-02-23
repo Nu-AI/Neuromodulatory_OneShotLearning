@@ -6,7 +6,8 @@ import decimal
 import skimage.data
 from skimage.transform import rescale, resize
 
-from ctypes import *
+import ctypes, ctypes.util
+from ctypes import cdll
 
 ##################################################################
 # The next section involves setting up the C++ wrappers for the  #
@@ -20,6 +21,9 @@ Fixedlib.Float_to_Fixed.argtypes = (ctypes.c_float, ctypes.c_int, ctypes.c_int)
 Fixedlib.Fixed_to_Float.restype = ctypes.c_float
 Fixedlib.Fixed_to_Float.argtypes = (ctypes.c_float, ctypes.c_int)
 
+Fixedlib.Fixed_to_Float2.restype = ctypes.c_float
+Fixedlib.Fixed_to_Float2.argtypes = (ctypes.c_float, ctypes.c_int)
+
 Fixedlib.Fixed_Mul.restype = ctypes.c_int32
 Fixedlib.Fixed_Mul.argtypes = (ctypes.c_float, ctypes.c_float, ctypes.c_int, ctypes.c_int)
 
@@ -27,11 +31,15 @@ Fixedlib.Fixed_ACC.restype = ctypes.c_float
 Fixedlib.Fixed_ACC.argtypes = (np.ctypeslib.ndpointer(dtype=np.float32), ctypes.c_int)
 
 def Float_to_Fixed(number, integer, fraction):
-    results = Fixedlib.Float_to_Fixed(number, integer, fraction)
-    return(results)
+    result = Fixedlib.Float_to_Fixed(number, integer, fraction)
+    return result
 
 def Fixed_to_Float(number, fraction):
     result = Fixedlib.Fixed_to_Float(number, fraction)
+    return result
+
+def Fixed_to_Float2(number, fraction):
+    result = Fixedlib.Fixed_to_Float2(number, fraction)
     return result
 
 def Fixed_Mul(input1, input2, integer, fraction):
@@ -113,10 +121,19 @@ class conv_3_3:
     def conv_perform(self, input_map, filter):
 
         point_wise_mult = 0
+
         temp_counter_1  = 0
         temp_counter_2  = 0
         feature_map_size = int((input_map.shape[1] - self.kernel_size) / (self.stride)) + 1
         feature_map = np.zeros((feature_map_size, feature_map_size))
+
+
+        #Setting up in fixed and floating point
+        point_wise_mult_fixed = 0
+        val_in_float = 0.0
+        feature_map_float = np.zeros((feature_map_size, feature_map_size))
+        feature_map_fixed = np.zeros((feature_map_size, feature_map_size))
+        temp_array  = np.zeros((feature_map_size, feature_map_size))
 
         input_map_size_row = input_map.shape[0]
         input_map_size_col = input_map.shape[1]
@@ -125,12 +142,20 @@ class conv_3_3:
                 for i in range(self.kernel_size):
                     for j in range (self.kernel_size):
                         point_wise_mult += input_map[i][j] * filter[i][j]
-                        point_wise_mult += Fixed_Mul(input_map[i][j],filter[i][j],1,10)                        
+                        point_wise_mult_fixed += Fixed_Mul(input_map[i][j],filter[i][j],1,10)
+                        val_in_float = Fixed_to_Float2(point_wise_mult_fixed, 16)
                 feature_map[temp_counter_1][temp_counter_2] = point_wise_mult
+                feature_map_fixed[temp_counter_1][temp_counter_2] = point_wise_mult_fixed
+                feature_map_float[temp_counter_1][temp_counter_2] = val_in_float
                 temp_counter_1 +=1
             temp_counter_2 += 1
             temp_counter_1 = 0
+        temp_array = feature_map - feature_map_float
+        #print (temp_array, "the difference in precision values")
+        #print (feature_map_fixed, "this is the feature map in fixed point")
+        print (feature_map_float, "this is the feature map in float")
         return feature_map
+
 
 c = conv_3_3(img, 3,2,2)
 feature_maps = c.forward(l1_filter)
