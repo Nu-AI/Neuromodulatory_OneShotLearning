@@ -24,13 +24,7 @@ def read_fc_params(seed):
         dict[i] = dict[i].cpu().numpy()
     return dict, tmpw.cpu().detach().numpy(), tmpalpha.cpu().detach().numpy(), tmpeta.cpu().detach().numpy()
 
-#print (tmpw.shape, tmpalpha.shape, tmpeta.shape)
-#print ("The final layer weighs are ", tmpw)
 dict1 = {}
 dict1, tmpw, tmpalpha, tmpeta = read_fc_params(1)
 
-
 print (dict1['cv1.weight'].shape, dict1['cv1.bias'].shape)
-
-#print (dict['w'])
-#print  (dict)
