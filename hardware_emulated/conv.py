@@ -156,18 +156,19 @@ class conv_3_3:
                 for i in range (self.kernel_size):
                     for j in range (self.kernel_size):
                         point_wise_mult += input_map[k+i][t+j] * filter[i][j]
-                        point_wise_mult_fixed += Fixed_Mul(input_map[i][j],filter[i][j],2,10)
-                        val_in_float = Fixed_to_Float2(point_wise_mult_fixed, 10)
+                        point_wise_mult_fixed += Fixed_Mul(input_map[k+i][t+j],filter[i][j],4,12)
+                        val_in_float = Fixed_to_Float2(point_wise_mult_fixed, 12)
                 feature_map[temp_counter_1][temp_counter_2] = point_wise_mult
                 feature_map_fixed[temp_counter_1][temp_counter_2] = point_wise_mult_fixed
                 feature_map_float[temp_counter_1][temp_counter_2] = val_in_float
                 temp_counter_1 += 1
                 point_wise_mult = 0
+                point_wise_mult_fixed = 0
             temp_counter_2 += 1
             temp_counter_1 = 0
         temp_array = feature_map - feature_map_float
-        #print (feature_map, "the difference in precision values")
-        return feature_map
+        #print (temp_array, "the difference in precision values")
+        return feature_map_float
 
 conv1 = conv_3_3(img, 3,2,2)
 feature_maps = conv1.forward(l1_filter)
