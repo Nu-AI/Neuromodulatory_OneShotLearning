@@ -7,12 +7,12 @@
 
 using namespace std;
 
-//int32_t Float_to_Fixed(float number, int integer, int fraction);
+// int32_t Float_to_Fixed(float number, int integer, int fraction);
 int32_t OverflowCorrection(int number,int bit_number);
-//float Fixed_to_Float(float input, int Fraction);
-//float Fixed_to_Float2(float input, int integer, int Frcation);
-//int32_t Fixed_Mul(float input1, float input2, int integer, int fraction);
-//float Fixed_ACC(float Product[], int shape);
+// float Fixed_to_Float(float input, int Fraction);
+// float Fixed_to_Float2(float input, int integer, int Frcation);
+// int32_t Fixed_Mul(float input1, float input2, int integer, int fraction);
+// float Fixed_ACC(float *Product, int shape);
 
 
 // int main()
@@ -64,6 +64,8 @@ extern "C"
     return number_ovf;
 }
 }
+
+
 int32_t OverflowCorrection(int number,int bit_number)
 {
     int Max_number= 0;
