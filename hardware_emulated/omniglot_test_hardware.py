@@ -11,83 +11,41 @@ import skimage
 from skimage import transform
 import os
 import platform
+from conv import *
+from weight_loader import *
+from input_generator import *
 
 
 defaultParams = {
 
-    'nbclasses': 5,
-    'nbshots': 1,  # Number of 'shots' in the few-shots learning
-    'prestime': 1,
-    'nbf' : 64    ,
-    'prestimetest': 1,
-    'interpresdelay': 0,
-    'imagesize': 31,    # 28*28
-    'nbiter': 10000000,
-    'learningrate': 1e-5,
-    'print_every': 10,
-    'rngseed':0,
-    'quantization': 0
+    'no_classes': 5,                                   # Number of classes in the N-way K-shot learning case
+    'no_shots': 1,                                     # Number of 'shots' in the few-shots learning
+    'rand_seed':0,                                     # Select the random seed file for taking the weights
+    'no_filters' : 64,                                 # Numebr of filters in the convolutional layers
+    'imagesize': 31,                                   # The size of the 2D images to be reshaped to
+    'learningrate': 1e-5,                              # The initial learning rate for the network
+    'present_test': 1,                                 # Number of times we present the testing class
+    'address': '../omniglot_dataset/omniglot/python/', # enter the path of the dataset here
+    #'print_every': 10,  # After how many epochs
 }
-NBTESTCLASSES = 100
+TEST_CLASSES = 100
 
-def gen_inputs_labels_target(params, imagedata):
-        inputT = np.zeros((params['nbsteps'], 1, 1, params['imagesize'], params['imagesize']))    #inputTensor, initially in numpy format... Note dimensions: number of steps x batchsize (always 1) x NbChannels (also 1) x h x w
-        labelT = np.zeros((params['nbsteps'], 1, params['nbclasses']))      #labelTensor, initially in numpy format...
+class omniglot_hd_emulation:
 
-        patterns=[]
-        if test:
-            cats = np.random.permutation(np.arange(len(imagedata) - NBTESTCLASSES, len(imagedata)))[:params['nbclasses']]  # Which categories to use for this *testing* episode?
-        else:
-            cats = np.random.permutation(np.arange(len(imagedata) - NBTESTCLASSES))[:params['nbclasses']]  # Which categories to use for this *training* episode?
-
-        cats = np.random.permutation(cats)
-        #print(cats)
+    def __init__(self, params):
+        self.params = params
+        self.params['steps'] =  params['no_shots']*(params['no_classes']) + params['present_test']
+        print ("Started the emulation")
 
 
-        rots = np.random.randint(4, size=len(imagedata))
+    def send_inputs(self):
+        input_val = input_generator()
+        inputdata = input_val.dataset_reader(self.params['address'])
+        #print (self.params['steps'])
+        inputs, labels, testlabel  = input_val.gen_inputs_labels_testlabel(self.params, inputdata, test=False)
 
-
-        testcat = random.choice(cats) # select the class on which we'll test in this episode
-        unpermcats = cats.copy()
-
-
-        location = 0
-        for nc in range(params['nbshots']):
-            np.random.shuffle(cats)   # Presentations occur in random order
-            for ii, catnum in enumerate(cats):
-                #print(catnum)
-                p = random.choice(imagedata[catnum])
-                for nr in range(rots[catnum]):
-                    p = np.rot90(p)
-                p = skimage.transform.resize(p, (31, 31))
-                for nn in range(params['prestime']):
-
-
-                    inputT[location][0][0][:][:] = p[:][:]
-                    labelT[location][0][np.where(unpermcats == catnum)] = 1
-                    #if nn == 0:
-                    #    print(labelT[location][0])
-                    location += 1
-                location += params['interpresdelay']
-
-        # Inserting the test character
-        p = random.choice(imagedata[testcat])
-        for nr in range(rots[testcat]):
-            p = np.rot90(p)
-        p = skimage.transform.resize(p, (31, 31))
-        for nn in range(params['prestimetest']):
-            inputT[location][0][0][:][:] = p[:][:]
-            location += 1
-
-        # Generating the test label
-        testlabel = np.zeros(params['nbclasses'])
-        testlabel[np.where(unpermcats == testcat)] = 1
-
-
-        assert(location == params['nbsteps'])
-
-        inputT = torch.from_numpy(inputT).type(ttype)  # Convert from numpy to Tensor
-        labelT = torch.from_numpy(labelT).type(ttype)
-        targetL = torch.from_numpy(testlabel).type(ttype)
-
-        return inputT, labelT, targetL
+params = {}
+params.update(defaultParams)
+print (params)
+emulate = omniglot_hd_emulation(params)
+emulate.send_inputs()

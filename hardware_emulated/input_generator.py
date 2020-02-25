@@ -20,7 +20,7 @@ defaultParams = {
     'rand_seed':0,  # Select the random seed file for taking the weights
     'no_filters' : 64, # Numebr of filters in the convolutional layers
     'imagesize': 31,    # The size of the 2D images to be reshaped to
-    'present_test': 1, 
+    'present_test': 1,
     'learningrate': 1e-5, # The initial learning rate for the network
     #'print_every': 10,  # After how many epochs
 }
@@ -68,7 +68,7 @@ class input_generator:
         return imagedata
 
 
-    def gen_inputs_labels_targets(self, params, imagedata, test):
+    def gen_inputs_labels_testlabel(self, params, imagedata, test):
 
             train_pick = np.arange(len(imagedata) - TEST_CLASSES, len(imagedata))
             test_pick  = np.arange(len(imagedata) - TEST_CLASSES)
@@ -100,7 +100,6 @@ class input_generator:
                     for _ in range(rotations[sample_num]):
                         p = np.rot90(p)
                     p = skimage.transform.resize(p, (31, 31))
-
                     inputs[selection,0,0,:,:] = p[:][:]
                     labels[selection][0][np.where(unpermuted_samples == sample_num)] = 1
                     #if nn == 0:
@@ -111,7 +110,7 @@ class input_generator:
             # Inserting the test character
             test_sample = random.choice(unpermuted_samples)
             p = random.choice(imagedata[test_sample])
-            for _ in range(rots[test_sample]):
+            for _ in range(rotations[test_sample]):
                 p = np.rot90(p)
             p = skimage.transform.resize(p, (31, 31))
 
@@ -128,6 +127,6 @@ class input_generator:
 
             #targets = torch.from_numpy(testlabel).type(torch.cuda.FloatTensor)
 
-            return inputs, labels, targets
+            return inputs, labels, testlabel
 
 input = input_generator()
