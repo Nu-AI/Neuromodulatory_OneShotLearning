@@ -20,6 +20,7 @@ defaultParams = {
     'rand_seed':0,  # Select the random seed file for taking the weights
     'no_filters' : 64, # Numebr of filters in the convolutional layers
     'imagesize': 31,    # The size of the 2D images to be reshaped to
+    'present_test': 1, 
     'learningrate': 1e-5, # The initial learning rate for the network
     #'print_every': 10,  # After how many epochs
 }
