@@ -8,6 +8,7 @@ import skimage
 from skimage import transform
 import os
 import platform
+import matplotlib.pyplot as plt
 
 import click
 import glob
@@ -27,17 +28,21 @@ TEST_CLASSES = 100
 class input_generator:
 
     def __init__(self,*args):
+        print ("Initialized the input_generator")
         for arg in args:
             print (arg)
 
 
     def dataset_reader(self,data_dir):
         train_dir = data_dir + 'images_background/'
-        test_dir = data_dir + 'images_evaluation'
+        test_dir = data_dir + 'images_evaluation/'
+        print (train_dir, test_dir)
+        imagedata = []
+        imagefilenames = []
         for curr_dir in (train_dir,
                         test_dir):
             classdirs = glob.glob(curr_dir+'*')
-            print(alphabet_dirs[:4],"meoww")
+            print(classdirs[:4],"meoww")
             for class_dir in classdirs:
                 imagedirs = glob.glob(class_dir+"/*")
                 #print(chardirs)
@@ -117,9 +122,10 @@ class input_generator:
             # Generating the test label
             testlabel[np.where(unpermuted_samples == test_sample)] = 1
 
-
             assert(selection == params['steps'])
 
             #targets = torch.from_numpy(testlabel).type(torch.cuda.FloatTensor)
 
             return inputs, labels, targets
+
+input = input_generator()
