@@ -60,7 +60,8 @@ class input_generator:
 
         # imagedata[CharactertNumber][FileNumber] -> numpy(105,105)
         np.random.shuffle(imagedata)
-        print(len(imagedata))
+        new_image_data = np.array(imagedata)
+        print(len(imagedata), new_image_data.shape)
         print(imagedata[1][2].shape)
         print("Data loaded!")
         return imagedata
