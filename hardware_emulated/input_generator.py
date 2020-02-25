@@ -42,7 +42,7 @@ class input_generator:
         for curr_dir in (train_dir,
                         test_dir):
             classdirs = glob.glob(curr_dir+'*')
-            print(classdirs[:4],"meoww")
+            #print(classdirs[:4],"meoww")
             for class_dir in classdirs:
                 imagedirs = glob.glob(class_dir+"/*")
                 #print(chardirs)
@@ -51,9 +51,9 @@ class input_generator:
                     imgfiles = glob.glob(image_dir+'/*')
                     #print (charfiles,"These are the charfiles")
                     for file in imgfiles:
-                        print(file,"the file data")
+                        #print(file,"the file data")
                         filedata = plt.imread(file)
-                        print(len(filedata))
+                        #print(len(filedata))
                         imgdata.append(filedata)
                     imagedata.append(imgdata)
                     imagefilenames.append(file)
