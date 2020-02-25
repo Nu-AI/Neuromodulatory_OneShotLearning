@@ -111,14 +111,14 @@ class conv_3_3:
         for ftr in range(self.nbfilters):
             print ("Entered thhe looop *******************", self.nbfilters, ftr)
             temp_filter = filter[ftr,:]
-            print (temp_filter.shape)
+            print (temp_filter.shape, self.input_map.shape[-1])
             if (len(self.input_map.shape)>2):
                 #print ("Larger map shape", self.input_map.shape)
                 #reshaped_filter = np.reshape(filter, (3,3,2))
                 conv_map = self.conv_perform(self.input_map[:,:,0], temp_filter[0,:,:])
                 for channel in range(1, self.input_map.shape[-1]):
                     count += channel
-                    print ("Entering the inner loop for accumulating results from feature maps", count,self.input_map[:,:,channel].shape)
+                    print ("Entering the inner loop for accumulating results from feature maps", (channel+ftr),self.input_map[:,:,channel].shape)
                     conv_map  = conv_map + self.conv_perform(self.input_map[:,:,channel], temp_filter[channel,:,:])
             else:
                 conv_map = self.conv_perform(self.input_map,temp_filter)
@@ -145,10 +145,11 @@ class conv_3_3:
         #Setting up in fixed and floating point
         point_wise_mult_fixed = 0
         val_in_float = 0.0
+        float_acc = 0.0
         feature_map_float = np.zeros((feature_map_size, feature_map_size))
         feature_map_fixed = np.zeros((feature_map_size, feature_map_size))
         temp_array  = np.zeros((feature_map_size, feature_map_size))
-
+        a = np.zeros((self.kernel_size*self.kernel_size),dtype=np.float32)
         input_map_size_row = input_map.shape[0]
         input_map_size_col = input_map.shape[1]
         for t in range(0, input_map_size_col - self.kernel_size+1, self.stride):
@@ -156,8 +157,11 @@ class conv_3_3:
                 for i in range (self.kernel_size):
                     for j in range (self.kernel_size):
                         point_wise_mult += input_map[k+i][t+j] * filter[i][j]
-                        point_wise_mult_fixed += Fixed_Mul(input_map[k+i][t+j],filter[i][j],4,12)
-                        val_in_float = Fixed_to_Float2(point_wise_mult_fixed, 12)
+                        point_wise_mult_fixed += Fixed_Mul(input_map[k+i][t+j],filter[i][j],6,10)
+                        a[i*j + j] = point_wise_mult_fixed
+                        val_in_float = Fixed_to_Float2(point_wise_mult_fixed, 10)
+                #Need to fix the fixed accumulator
+                #float_acc = Fixed_ACC(a,self.kernel_size*self.kernel_size)
                 feature_map[temp_counter_1][temp_counter_2] = point_wise_mult
                 feature_map_fixed[temp_counter_1][temp_counter_2] = point_wise_mult_fixed
                 feature_map_float[temp_counter_1][temp_counter_2] = val_in_float
@@ -172,13 +176,13 @@ class conv_3_3:
 
 conv1 = conv_3_3(img, 3,2,2)
 feature_maps = conv1.forward(l1_filter)
-print (feature_maps[:,:,0], feature_maps.shape)
+#print (feature_maps[:,:,0], feature_maps.shape)
 conv2  = conv_3_3(feature_maps, 3,2,2)
 new_feature_maps= conv2.forward(l2_filter)
-print(new_feature_maps,new_feature_maps.shape)
+#print(new_feature_maps,new_feature_maps.shape)
 conv3  = conv_3_3(new_feature_maps, 3,2,2)
 updated_f_maps = conv3.forward(l2_filter)
-print (updated_f_maps,updated_f_maps.shape)
+#print (updated_f_maps,updated_f_maps.shape)
 conv4 = conv_3_3(updated_f_maps,3,2,2)
 updated_final_maps = conv4.forward(l2_filter)
-print(updated_final_maps,updated_final_maps.shape)
+#print(updated_final_maps,updated_final_maps.shape)
