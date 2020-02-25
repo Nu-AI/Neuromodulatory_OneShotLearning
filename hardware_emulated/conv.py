@@ -109,16 +109,16 @@ class conv_3_3:
         #Starting the convolutions
         count = 0
         for ftr in range(self.nbfilters):
-            print ("Entered thhe looop *******************", self.nbfilters, ftr)
+            #print ("Entered thhe looop *******************", self.nbfilters, ftr)
             temp_filter = filter[ftr,:]
-            print (temp_filter.shape, self.input_map.shape[-1])
+            #print (temp_filter.shape, self.input_map.shape[-1])
             if (len(self.input_map.shape)>2):
                 #print ("Larger map shape", self.input_map.shape)
                 #reshaped_filter = np.reshape(filter, (3,3,2))
                 conv_map = self.conv_perform(self.input_map[:,:,0], temp_filter[0,:,:])
                 for channel in range(1, self.input_map.shape[-1]):
                     count += channel
-                    print ("Entering the inner loop for accumulating results from feature maps", (channel+ftr),self.input_map[:,:,channel].shape)
+                    #print ("Entering the inner loop for accumulating results from feature maps", (channel+ftr),self.input_map[:,:,channel].shape)
                     conv_map  = conv_map + self.conv_perform(self.input_map[:,:,channel], temp_filter[channel,:,:])
             else:
                 conv_map = self.conv_perform(self.input_map,temp_filter)
@@ -158,7 +158,7 @@ class conv_3_3:
                     for j in range (self.kernel_size):
                         point_wise_mult += input_map[k+i][t+j] * filter[i][j]
                         point_wise_mult_fixed += Fixed_Mul(input_map[k+i][t+j],filter[i][j],6,10)
-                        a[i*j + j] = point_wise_mult_fixed
+                        a[i*j + j] = point_wise_mult_fixed # Testing for fixed accum
                         val_in_float = Fixed_to_Float2(point_wise_mult_fixed, 10)
                 #Need to fix the fixed accumulator
                 #float_acc = Fixed_ACC(a,self.kernel_size*self.kernel_size)
