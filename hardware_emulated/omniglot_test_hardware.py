@@ -16,6 +16,56 @@ from weight_loader import *
 from input_generator import *
 
 
+import ctypes, ctypes.util
+from ctypes import cdll
+
+##################################################################
+# The next section involves setting up the C++ wrappers for the  #
+# given convolutional operations in fixed point.                 #
+##################################################################
+Fixedlib = ctypes.CDLL("FixedPoint.so")
+
+Fixedlib.Float_to_Fixed.restype = ctypes.c_int32
+Fixedlib.Float_to_Fixed.argtypes = (ctypes.c_float, ctypes.c_int, ctypes.c_int)
+
+Fixedlib.Fixed_to_Float.restype = ctypes.c_float
+Fixedlib.Fixed_to_Float.argtypes = (ctypes.c_float, ctypes.c_int)
+
+Fixedlib.Fixed_to_Float2.restype = ctypes.c_float
+Fixedlib.Fixed_to_Float2.argtypes = (ctypes.c_float, ctypes.c_int)
+
+Fixedlib.Fixed_Mul.restype = ctypes.c_int32
+Fixedlib.Fixed_Mul.argtypes = (ctypes.c_float, ctypes.c_float, ctypes.c_int, ctypes.c_int)
+
+Fixedlib.Fixed_ACC.restype = ctypes.c_float
+Fixedlib.Fixed_ACC.argtypes = (np.ctypeslib.ndpointer(dtype=np.float32), ctypes.c_int)
+
+def Float_to_Fixed(number, integer, fraction):
+    result = Fixedlib.Float_to_Fixed(number, integer, fraction)
+    return result
+
+def Fixed_to_Float(number, fraction):
+    result = Fixedlib.Fixed_to_Float(number, fraction)
+    return result
+
+def Fixed_to_Float2(number, fraction):
+    result = Fixedlib.Fixed_to_Float2(number, fraction)
+    return result
+
+def Fixed_Mul(input1, input2, integer, fraction):
+    result = Fixedlib.Fixed_Mul(input1, input2, integer, fraction)
+    return result
+
+def Fixed_ACC(Product, shape):
+    result = Fixedlib.Fixed_ACC(Product, shape)
+    return result
+
+
+
+
+#################################################################
+# Sample stuff for debugging and testing the functionality      #
+#################################################################
 image = skimage.data.chelsea()
 img  = skimage.color.rgb2gray(image)
 l1_filter = np.zeros((2,3,3))
@@ -74,30 +124,44 @@ class omniglot_hd_emulation:
         input_val = input_generator()
         inputdata = input_val.dataset_reader(self.params['address'])
         inputs, labels, testlabel  = input_val.gen_inputs_labels_testlabel(self.params, inputdata, test=False)
-
+        return inputs, labels, testlabel
 
     def read_weights(self):
         load_weights = weight_loader()
         dict1, tmpw, tmpalpha, tmpeta =weight_load.read_fc_params(1)
         print ("Done loading weights")
+        return dict1, tmpw, tmpalpha, tmpeta
 
     def Network(self, img):
         conv1 = conv_3_3(img, 3,2,2)
-        #feature_maps =
-        conv2  = conv_3_3(conv1.forward(l1_filter), 3,2,2)
-        #new_feature_maps= conv2.forward(l2_filter)
-        #print(new_feature_maps,new_feature_maps.shape)
-        conv3  = conv_3_3(conv2.forward(l2_filter), 3,2,2)
-        #updated_f_maps = conv3.forward(l2_filter)
-        #print (updated_f_maps,updated_f_maps.shape)
-        conv4 = conv_3_3(conv3.forward(l2_filter),3,2,2)
-        #updated_final_maps = conv4.forward(l2_filter)
+        conv2 = conv_3_3(conv1.forward(l1_filter), 3,2,2)
+        conv3 = conv_3_3(conv2.forward(l2_filter), 3,2,2)
+        conv4 = conv_3_3(conv3.forward(l2_filter), 3,2,2)
+
         print (conv4.forward(l2_filter), "This is the final conv layer output")
+
+
+
 
 params = {}
 params.update(defaultParams)
 print (params)
 emulate = omniglot_hd_emulation(params)
-emulate.read_inputs()
-emulate.read_weights()
+inputs, labels, testlabel = emulate.read_inputs()
+input_fixed_arr = np.empty_like(inputs)
+for i in range(6):
+    temp_array = inputs[i,:,:]
+    print (temp_array.shape)
+    temp2_array = np.reshape(temp_array,(temp_array.shape[0]*temp_array.shape[1]))
+    print (temp2_array.shape)
+    input_list = temp2_array.tolist()
+    input_fixed = list(map(lambda x: Float_to_Fixed(x,2,12), input_list))
+    input_fixed = np.reshape(np.array(input_fixed),(temp_array.shape[0], temp_array.shape[1]) )
+    input_fixed_arr[i] = input_fixed
+print (input_fixed_arr.shape)
+
+print (inputs.shape, labels.shape, testlabel)
+dict1, tmpw, tmpalpha, tmpeta = emulate.read_weights()
+print_keys = "".join(str(key) + " " for key in dict1)
+print (print_keys)
 emulate.Network(img)
