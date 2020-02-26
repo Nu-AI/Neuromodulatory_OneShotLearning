@@ -23,42 +23,42 @@ from ctypes import cdll
 # The next section involves setting up the C++ wrappers for the  #
 # given convolutional operations in fixed point.                 #
 ##################################################################
-Fixedlib = ctypes.CDLL("FixedPoint.so")
-
-Fixedlib.Float_to_Fixed.restype = ctypes.c_int32
-Fixedlib.Float_to_Fixed.argtypes = (ctypes.c_float, ctypes.c_int, ctypes.c_int)
-
-Fixedlib.Fixed_to_Float.restype = ctypes.c_float
-Fixedlib.Fixed_to_Float.argtypes = (ctypes.c_float, ctypes.c_int)
-
-Fixedlib.Fixed_to_Float2.restype = ctypes.c_float
-Fixedlib.Fixed_to_Float2.argtypes = (ctypes.c_float, ctypes.c_int)
-
-Fixedlib.Fixed_Mul.restype = ctypes.c_int32
-Fixedlib.Fixed_Mul.argtypes = (ctypes.c_float, ctypes.c_float, ctypes.c_int, ctypes.c_int)
-
-Fixedlib.Fixed_ACC.restype = ctypes.c_float
-Fixedlib.Fixed_ACC.argtypes = (np.ctypeslib.ndpointer(dtype=np.float32), ctypes.c_int)
-
-def Float_to_Fixed(number, integer, fraction):
-    result = Fixedlib.Float_to_Fixed(number, integer, fraction)
-    return result
-
-def Fixed_to_Float(number, fraction):
-    result = Fixedlib.Fixed_to_Float(number, fraction)
-    return result
-
-def Fixed_to_Float2(number, fraction):
-    result = Fixedlib.Fixed_to_Float2(number, fraction)
-    return result
-
-def Fixed_Mul(input1, input2, integer, fraction):
-    result = Fixedlib.Fixed_Mul(input1, input2, integer, fraction)
-    return result
-
-def Fixed_ACC(Product, shape):
-    result = Fixedlib.Fixed_ACC(Product, shape)
-    return result
+# Fixedlib = ctypes.CDLL("FixedPoint.so")
+#
+# Fixedlib.Float_to_Fixed.restype = ctypes.c_int32
+# Fixedlib.Float_to_Fixed.argtypes = (ctypes.c_float, ctypes.c_int, ctypes.c_int)
+#
+# Fixedlib.Fixed_to_Float.restype = ctypes.c_float
+# Fixedlib.Fixed_to_Float.argtypes = (ctypes.c_float, ctypes.c_int)
+#
+# Fixedlib.Fixed_to_Float2.restype = ctypes.c_float
+# Fixedlib.Fixed_to_Float2.argtypes = (ctypes.c_float, ctypes.c_int)
+#
+# Fixedlib.Fixed_Mul.restype = ctypes.c_int32
+# Fixedlib.Fixed_Mul.argtypes = (ctypes.c_float, ctypes.c_float, ctypes.c_int, ctypes.c_int)
+#
+# Fixedlib.Fixed_ACC.restype = ctypes.c_float
+# Fixedlib.Fixed_ACC.argtypes = (np.ctypeslib.ndpointer(dtype=np.float32), ctypes.c_int)
+#
+# def Float_to_Fixed(number, integer, fraction):
+#     result = Fixedlib.Float_to_Fixed(number, integer, fraction)
+#     return result
+#
+# def Fixed_to_Float(number, fraction):
+#     result = Fixedlib.Fixed_to_Float(number, fraction)
+#     return result
+#
+# def Fixed_to_Float2(number, fraction):
+#     result = Fixedlib.Fixed_to_Float2(number, fraction)
+#     return result
+#
+# def Fixed_Mul(input1, input2, integer, fraction):
+#     result = Fixedlib.Fixed_Mul(input1, input2, integer, fraction)
+#     return result
+#
+# def Fixed_ACC(Product, shape):
+#     result = Fixedlib.Fixed_ACC(Product, shape)
+#     return result
 
 
 
@@ -140,24 +140,24 @@ class omniglot_hd_emulation:
 
         print (conv4.forward(l2_filter), "This is the final conv layer output")
 
-
-
+    def inputs_to_fixed(self, inputs):
+        input_fixed_arr = np.empty_like(inputs)
+        for i in range(self.params['steps']):
+            input_list = list(np.reshape(inputs[i,:,:],(self.params['imagesize']*self.params['imagesize'])))
+            #print (temp2_array.shape)
+            #input_list = temp2_array.tolist()
+            input_fixed = list(map(lambda x: Float_to_Fixed(x,2,12), input_list))
+            input_fixed = np.reshape(np.array(input_fixed),(self.params['imagesize'], self.params['imagesize']) )
+            input_fixed_arr[i] = input_fixed
+        return input_fixed_arr
 
 params = {}
 params.update(defaultParams)
 print (params)
 emulate = omniglot_hd_emulation(params)
 inputs, labels, testlabel = emulate.read_inputs()
-input_fixed_arr = np.empty_like(inputs)
-for i in range(6):
-    temp_array = inputs[i,:,:]
-    print (temp_array.shape)
-    temp2_array = np.reshape(temp_array,(temp_array.shape[0]*temp_array.shape[1]))
-    print (temp2_array.shape)
-    input_list = temp2_array.tolist()
-    input_fixed = list(map(lambda x: Float_to_Fixed(x,2,12), input_list))
-    input_fixed = np.reshape(np.array(input_fixed),(temp_array.shape[0], temp_array.shape[1]) )
-    input_fixed_arr[i] = input_fixed
+input_fixed_arr = emulate.inputs_to_fixed(inputs)
+
 print (input_fixed_arr.shape)
 
 print (inputs.shape, labels.shape, testlabel)
