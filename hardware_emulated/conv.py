@@ -123,7 +123,7 @@ class conv_3_3:
                     conv_map  = conv_map + self.conv_perform(self.input_map[:,:,channel], temp_filter[channel,:,:])
             else:
                 conv_map = self.conv_perform(self.input_map,temp_filter)
-            temp_feature_map[:,:,ftr] = conv_map
+            temp_feature_map[:,:,ftr] = conv_map + Fixed_to_Float(Float_to_Fixed(self.bias[ftr],6,10),10)
 
 
         return (temp_feature_map)
