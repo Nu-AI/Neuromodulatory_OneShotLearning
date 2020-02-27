@@ -62,7 +62,7 @@ class input_generator:
         # imagedata[CharactertNumber][FileNumber] -> numpy(105,105)
         np.random.shuffle(imagedata)
         new_image_data = np.array(imagedata)
-        print(len(imagedata), new_image_data.shape)
+        print(len(imagedata), new_image_data.shape, 'this is the imagedata')
         print(imagedata[1][2].shape)
         print("Data loaded!")
         return imagedata
@@ -80,8 +80,8 @@ class input_generator:
 
             pick_samples = np.random.permutation(pick_samples) # Again randomizing
 
-            inputs = np.zeros((params['steps'], 1, 1, params['imagesize'], params['imagesize']))    #inputTensor, initially in numpy format... Note dimensions: number of steps x batchsize (always 1) x NbChannels (also 1) x h x w
-            labels = np.zeros((params['steps'], 1, params['no_classes']))      #labelTensor, initially in numpy format...
+            inputs = np.zeros((params['steps'], params['imagesize'], params['imagesize']))    #inputTensor, initially in numpy format... Note dimensions: number of steps x batchsize (always 1) x NbChannels (also 1) x h x w
+            labels = np.zeros((params['steps'], params['no_classes']))      #labelTensor, initially in numpy format...
             testlabel = np.zeros(params['no_classes'])
 
             rotations = np.random.randint(4, size=len(imagedata))
@@ -100,8 +100,8 @@ class input_generator:
                     for _ in range(rotations[sample_num]):
                         p = np.rot90(p)
                     p = skimage.transform.resize(p, (31, 31))
-                    inputs[selection,0,0,:,:] = p[:][:]
-                    labels[selection][0][np.where(unpermuted_samples == sample_num)] = 1
+                    inputs[selection,:,:] = p[:][:]
+                    labels[selection][np.where(unpermuted_samples == sample_num)] = 1
                     #if nn == 0:
                     #    print(labelT[location][0])
                     selection += 1
@@ -115,9 +115,9 @@ class input_generator:
             p = skimage.transform.resize(p, (31, 31))
 
             #inputs[selection][0][0][:][:] = p[:][:]
-            inputs[selection,0,0,:,:] = p[:][:]
+            inputs[selection,:,:] = p[:][:]
             selection += 1
-
+            
             # inputs = torch.from_numpy(inputs).type(torch.cuda.FloatTensor)  # Convert from numpy to Tensor
             # labels = torch.from_numpy(labels).type(torch.cuda.FloatTensor)
             # Generating the test label

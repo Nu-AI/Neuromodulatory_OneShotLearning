@@ -88,12 +88,13 @@ l2_filter[1,:,:,:] = l1_filter_new
 
 class conv_3_3:
 
-    def __init__(self, input_map, kernel_size, stride, nbfilters):
+    def __init__(self, input_map, kernel_size, stride, nbfilters, bias):
         self.nbfilters = nbfilters
         self.input_map = input_map
         self.kernel_size = kernel_size
         self.stride = stride
         self.filter_array = np.random.randn(nbfilters, 3, 3) / 9
+        self.bias = bias
 
     ###############################################################
     # Convolution operation handler. Regulates the number of      #
@@ -124,7 +125,8 @@ class conv_3_3:
                 conv_map = self.conv_perform(self.input_map,temp_filter)
             temp_feature_map[:,:,ftr] = conv_map
 
-        return temp_feature_map
+
+        return (temp_feature_map)
 
     ###############################################################
     # This method performs the actual convolutions. The selected  #
@@ -174,15 +176,17 @@ class conv_3_3:
         #print (temp_array, "the difference in precision values")
         return feature_map_float
 
-conv1 = conv_3_3(img, 3,2,2)
+bias = np.array([0.05, -0.02])
+print (Fixed_to_Float(Float_to_Fixed(bias[0],4,12),12), "the converted bias value", bias[0])
+conv1 = conv_3_3(img, 3,2,2, bias)
 feature_maps = conv1.forward(l1_filter)
 #print (feature_maps[:,:,0], feature_maps.shape)
-conv2  = conv_3_3(feature_maps, 3,2,2)
+conv2  = conv_3_3(feature_maps, 3,2,2,bias)
 new_feature_maps= conv2.forward(l2_filter)
 #print(new_feature_maps,new_feature_maps.shape)
-conv3  = conv_3_3(new_feature_maps, 3,2,2)
+conv3  = conv_3_3(new_feature_maps, 3,2,2,bias)
 updated_f_maps = conv3.forward(l2_filter)
 #print (updated_f_maps,updated_f_maps.shape)
-conv4 = conv_3_3(updated_f_maps,3,2,2)
+conv4 = conv_3_3(updated_f_maps,3,2,2,bias)
 updated_final_maps = conv4.forward(l2_filter)
 #print(updated_final_maps,updated_final_maps.shape)
