@@ -120,11 +120,16 @@ class omniglot_hd_emulation:
         print ("Started the emulation")
 
 
-    def read_inputs(self):
+    def read_input_dataset(self):
         input_val = input_generator()
         inputdata = input_val.dataset_reader(self.params['address'])
-        inputs, labels, testlabel  = input_val.gen_inputs_labels_testlabel(self.params, inputdata, test=False)
-        return inputs, labels, testlabel
+        print (np.array(inputdata).shape,"the shape of the input data")
+        #inputs, labels, testlabel  = input_val.gen_inputs_labels_testlabel(self.params, inputdata, test=False)
+        return inputdata
+
+    def read_inputs(self, dataset):
+        input_val = input_generator()
+        return input_val.gen_inputs_labels_testlabel(self.params, dataset, test=False)
 
     def read_weights(self):
         load_weights = weight_loader()
@@ -149,13 +154,15 @@ class omniglot_hd_emulation:
             input_fixed = list(map(lambda x: Float_to_Fixed(x,2,12), input_list))
             input_fixed = np.reshape(np.array(input_fixed),(self.params['imagesize'], self.params['imagesize']) )
             input_fixed_arr[i] = input_fixed
+
         return input_fixed_arr
 
 params = {}
 params.update(defaultParams)
 print (params)
 emulate = omniglot_hd_emulation(params)
-inputs, labels, testlabel = emulate.read_inputs()
+
+inputs, labels, testlabel = emulate.read_inputs(emulate.read_input_dataset())
 input_fixed_arr = emulate.inputs_to_fixed(inputs)
 
 print (input_fixed_arr.shape)
@@ -165,3 +172,8 @@ dict1, tmpw, tmpalpha, tmpeta = emulate.read_weights()
 print_keys = "".join(str(key) + " " for key in dict1)
 print (print_keys)
 emulate.Network(img)
+
+#
+# def train(parameters):
+#     params = {}
+#     params.update(parameters)
