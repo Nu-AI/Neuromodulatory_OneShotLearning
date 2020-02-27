@@ -31,7 +31,9 @@ class weight_loader:
 
 weight_load = weight_loader()
 
-# dict1 = {}
-# dict1, tmpw, tmpalpha, tmpeta =weight_load.read_fc_params(1)
-#
-# print (dict1['cv2.weight'].shape, dict1['cv2.bias'].shape)
+dict1 = {}
+dict1, tmpw, tmpalpha, tmpeta =weight_load.read_fc_params(1)
+print (dict1['cv1.weight'].shape, dict1['cv1.bias'].shape, dict1['cv1.weight'].dtype)
+for keys in dict1:
+    print (keys)
+print (dict1['cv1.bias'].shape, dict1['cv2.bias'].shape, dict1['cv3.bias'].shape, dict1['cv4.bias'].shape)

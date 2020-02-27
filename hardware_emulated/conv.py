@@ -112,7 +112,9 @@ class conv_3_3:
         for ftr in range(self.nbfilters):
             #print ("Entered thhe looop *******************", self.nbfilters, ftr)
             temp_filter = filter[ftr,:]
-            #print (temp_filter.shape, self.input_map.shape[-1])
+            #print (temp_filter.shape[0], self.input_map.shape, "the filters shape")
+            if (temp_filter.shape[0] == 1):
+                temp_filter = np.reshape(temp_filter,(3,3))
             if (len(self.input_map.shape)>2):
                 #print ("Larger map shape", self.input_map.shape)
                 #reshaped_filter = np.reshape(filter, (3,3,2))
@@ -159,6 +161,7 @@ class conv_3_3:
                 for i in range (self.kernel_size):
                     for j in range (self.kernel_size):
                         point_wise_mult += input_map[k+i][t+j] * filter[i][j]
+                        #print(input_map[k+i][t+j], filter[i][j], "the pointwise multipliers")
                         point_wise_mult_fixed += Fixed_Mul(input_map[k+i][t+j],filter[i][j],6,10)
                         a[i*j + j] = point_wise_mult_fixed # Testing for fixed accum
                         val_in_float = Fixed_to_Float2(point_wise_mult_fixed, 10)
@@ -174,19 +177,19 @@ class conv_3_3:
             temp_counter_1 = 0
         temp_array = feature_map - feature_map_float
         #print (temp_array, "the difference in precision values")
-        return feature_map_float
+        return feature_map
 
-bias = np.array([0.05, -0.02])
-print (Fixed_to_Float(Float_to_Fixed(bias[0],4,12),12), "the converted bias value", bias[0])
-conv1 = conv_3_3(img, 3,2,2, bias)
-feature_maps = conv1.forward(l1_filter)
-#print (feature_maps[:,:,0], feature_maps.shape)
-conv2  = conv_3_3(feature_maps, 3,2,2,bias)
-new_feature_maps= conv2.forward(l2_filter)
-#print(new_feature_maps,new_feature_maps.shape)
-conv3  = conv_3_3(new_feature_maps, 3,2,2,bias)
-updated_f_maps = conv3.forward(l2_filter)
-#print (updated_f_maps,updated_f_maps.shape)
-conv4 = conv_3_3(updated_f_maps,3,2,2,bias)
-updated_final_maps = conv4.forward(l2_filter)
-#print(updated_final_maps,updated_final_maps.shape)
+# bias = np.array([0.05, -0.02])
+# print (Fixed_to_Float(Float_to_Fixed(bias[0],4,12),12), "the converted bias value", bias[0])
+# conv1 = conv_3_3(img, 3,2,2, bias)
+# feature_maps = conv1.forward(l1_filter)
+# #print (feature_maps[:,:,0], feature_maps.shape)
+# conv2  = conv_3_3(feature_maps, 3,2,2,bias)
+# new_feature_maps= conv2.forward(l2_filter)
+# #print(new_feature_maps,new_feature_maps.shape)
+# conv3  = conv_3_3(new_feature_maps, 3,2,2,bias)
+# updated_f_maps = conv3.forward(l2_filter)
+# #print (updated_f_maps,updated_f_maps.shape)
+# conv4 = conv_3_3(updated_f_maps,3,2,2,bias)
+# updated_final_maps = conv4.forward(l2_filter)
+# #print(updated_final_maps,updated_final_maps.shape)

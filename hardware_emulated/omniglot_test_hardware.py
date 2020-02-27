@@ -107,6 +107,7 @@ defaultParams = {
     'imagesize': 31,                                   # The size of the 2D images to be reshaped to
     'learningrate': 1e-5,                              # The initial learning rate for the network
     'present_test': 1,                                 # Number of times we present the testing class
+    'no_test_iters': 1,
     'address': '../omniglot_dataset/omniglot/python/', # enter the path of the dataset here
     #'print_every': 10,  # After how many epochs
 }
@@ -137,13 +138,15 @@ class omniglot_hd_emulation:
         print ("Done loading weights")
         return dict1, tmpw, tmpalpha, tmpeta
 
-    def Network(self, img):
-        conv1 = conv_3_3(img, 3,2,2)
-        conv2 = conv_3_3(conv1.forward(l1_filter), 3,2,2)
-        conv3 = conv_3_3(conv2.forward(l2_filter), 3,2,2)
-        conv4 = conv_3_3(conv3.forward(l2_filter), 3,2,2)
+    def Network(self, img, kernel_size, stride,dict):
+        conv1 = conv_3_3(img, kernel_size,stride,self.params['no_filters'],dict['cv1.bias'])
+        #print (conv1.forward(dict['cv1.weight']))
+        conv2 = conv_3_3(conv1.forward(dict['cv1.weight']), kernel_size,stride,self.params['no_filters'], dict['cv2.bias'])
+        conv3 = conv_3_3(conv2.forward(dict['cv2.weight']), kernel_size,stride,self.params['no_filters'], dict['cv3.bias'])
+        conv4 = conv_3_3(conv3.forward(dict['cv3.weight']), kernel_size,stride,self.params['no_filters'], dict['cv4.bias'])
 
-        print (conv4.forward(l2_filter), "This is the final conv layer output")
+        print (conv4.forward(dict['cv4.weight']), "This is the final conv layer output")
+        return conv4.forward(dict['cv4.weight'])
 
     def inputs_to_fixed(self, inputs):
         input_fixed_arr = np.empty_like(inputs)
@@ -157,23 +160,52 @@ class omniglot_hd_emulation:
 
         return input_fixed_arr
 
-params = {}
-params.update(defaultParams)
-print (params)
-emulate = omniglot_hd_emulation(params)
-
-inputs, labels, testlabel = emulate.read_inputs(emulate.read_input_dataset())
-input_fixed_arr = emulate.inputs_to_fixed(inputs)
-
-print (input_fixed_arr.shape)
-
-print (inputs.shape, labels.shape, testlabel)
-dict1, tmpw, tmpalpha, tmpeta = emulate.read_weights()
-print_keys = "".join(str(key) + " " for key in dict1)
-print (print_keys)
-emulate.Network(img)
-
+# params = {}
+# params.update(defaultParams)
+# print (params)
+# emulate = omniglot_hd_emulation(params)
 #
-# def train(parameters):
-#     params = {}
-#     params.update(parameters)
+# inputs, labels, testlabel = emulate.read_inputs(emulate.read_input_dataset())
+# input_fixed_arr = emulate.inputs_to_fixed(inputs)
+#
+# print (input_fixed_arr.shape)
+#
+# print (inputs.shape, labels, testlabel)
+# dict1, tmpw, tmpalpha, tmpeta = emulate.read_weights()
+# print_keys = "".join(str(key) + " " for key in dict1)
+# print (print_keys)
+# emulate.Network(img)
+
+
+def train(parameters):
+    # Setup the parameter dictionary
+    params = {}
+    params.update(defaultParams)
+    print (params)
+
+    # Create an object for the omniglot file
+    emulate = omniglot_hd_emulation(params)
+
+    # Read the inputs, labels and testlabel - labels and testlabel in one-hot encoded format
+    input_dataset = emulate.read_input_dataset()
+
+    # Load the weights and the parameters of the network now
+    dict1, tmpw, tmpalpha, tmpeta = emulate.read_weights()
+
+
+    #Iterate the images over the Network now
+    #for num_test_sample in range(params['no_test_iters']):
+    inputs, labels, testlabel = emulate.read_inputs(emulate.read_input_dataset())
+    output_vector = emulate.Network(inputs[0], 3, 2, dict1)
+    print (output_vector.shape)
+    print ("the images went through the network")
+    #input_fixed_arr = emulate.inputs_to_fixed(inputs)
+
+    # print (input_fixed_arr.shape)
+    # print (inputs.shape, labels, testlabel)
+
+    print_keys = "".join(str(key) + " " for key in dict1)
+    print (print_keys)
+    #emulate.Network(img)
+
+train(defaultParams)
