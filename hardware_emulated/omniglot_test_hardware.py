@@ -107,7 +107,7 @@ defaultParams = {
     'imagesize': 31,                                   # The size of the 2D images to be reshaped to
     'learningrate': 1e-5,                              # The initial learning rate for the network
     'present_test': 1,                                 # Number of times we present the testing class
-    'no_test_iters': 1,
+    'no_test_iters': 10,
     'address': '../omniglot_dataset/omniglot/python/', # enter the path of the dataset here
     #'print_every': 10,  # After how many epochs
 }
@@ -186,18 +186,17 @@ def train(parameters):
     # Create an object for the omniglot file
     emulate = omniglot_hd_emulation(params)
 
-    # Read the inputs, labels and testlabel - labels and testlabel in one-hot encoded format
+    # Copy the dataset into a tensor converted to a numpy array
     input_dataset = emulate.read_input_dataset()
 
     # Load the weights and the parameters of the network now
     dict1, tmpw, tmpalpha, tmpeta = emulate.read_weights()
 
-
-    #Iterate the images over the Network now
-    #for num_test_sample in range(params['no_test_iters']):
-    inputs, labels, testlabel = emulate.read_inputs(emulate.read_input_dataset())
-    output_vector = emulate.Network(inputs[0], 3, 2, dict1)
-    print (output_vector.shape)
+    #Iterate the images over the network now
+    for num_test_sample in range(params['no_test_iters']):
+        inputs, labels, testlabel = emulate.read_inputs(input_dataset)
+        output_vector = emulate.Network(inputs[0], 3, 2, dict1)
+        print (output_vector.shape)
     print ("the images went through the network")
     #input_fixed_arr = emulate.inputs_to_fixed(inputs)
 
