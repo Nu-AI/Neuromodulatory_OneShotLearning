@@ -11,14 +11,17 @@ import skimage
 from skimage import transform
 import os
 import platform
+import seaborn as sns
+import matplotlib.pyplot as plt
 from conv import *
 from weight_loader import *
 from input_generator import *
 
-
+from conv_fp32 import *
 import ctypes, ctypes.util
 from ctypes import cdll
 
+sns.set()
 ##################################################################
 # The next section involves setting up the C++ wrappers for the  #
 # given convolutional operations in fixed point.                 #
@@ -59,8 +62,6 @@ from ctypes import cdll
 # def Fixed_ACC(Product, shape):
 #     result = Fixedlib.Fixed_ACC(Product, shape)
 #     return result
-
-
 
 
 #################################################################
@@ -107,7 +108,7 @@ defaultParams = {
     'imagesize': 31,                                   # The size of the 2D images to be reshaped to
     'learningrate': 1e-5,                              # The initial learning rate for the network
     'present_test': 1,                                 # Number of times we present the testing class
-    'no_test_iters': 10,
+    'no_test_iters': 1,
     'address': '../omniglot_dataset/omniglot/python/', # enter the path of the dataset here
     #'print_every': 10,  # After how many epochs
 }
@@ -144,6 +145,16 @@ class omniglot_hd_emulation:
         conv2 = conv_3_3(conv1.forward(dict['cv1.weight']), kernel_size,stride,self.params['no_filters'], dict['cv2.bias'])
         conv3 = conv_3_3(conv2.forward(dict['cv2.weight']), kernel_size,stride,self.params['no_filters'], dict['cv3.bias'])
         conv4 = conv_3_3(conv3.forward(dict['cv3.weight']), kernel_size,stride,self.params['no_filters'], dict['cv4.bias'])
+
+        print (conv4.forward(dict['cv4.weight']), "This is the final conv layer output")
+        return conv4.forward(dict['cv4.weight'])
+
+    def Network_fp(self, img, kernel_size, stride, dict):
+        conv1 = conv_3_3_fp(img, kernel_size,stride,self.params['no_filters'],dict['cv1.bias'])
+        #print (conv1.forward(dict['cv1.weight']))
+        conv2 = conv_3_3_fp(conv1.forward(dict['cv1.weight']), kernel_size,stride,self.params['no_filters'], dict['cv2.bias'])
+        conv3 = conv_3_3_fp(conv2.forward(dict['cv2.weight']), kernel_size,stride,self.params['no_filters'], dict['cv3.bias'])
+        conv4 = conv_3_3_fp(conv3.forward(dict['cv3.weight']), kernel_size,stride,self.params['no_filters'], dict['cv4.bias'])
 
         print (conv4.forward(dict['cv4.weight']), "This is the final conv layer output")
         return conv4.forward(dict['cv4.weight'])
@@ -196,15 +207,33 @@ def train(parameters):
     for num_test_sample in range(params['no_test_iters']):
         inputs, labels, testlabel = emulate.read_inputs(input_dataset)
         output_vector = emulate.Network(inputs[0], 3, 2, dict1)
-        print (output_vector.shape)
+        output_vector_fp = emulate.Network_fp(inputs[0], 3, 2, dict1)
+        print (output_vector.shape, output_vector_fp.shape)
     print ("the images went through the network")
-    #input_fixed_arr = emulate.inputs_to_fixed(inputs)
+    # print ("***************************************\n", output_vector)
+    # print("\n ***************************************", output_vector_fp)
 
+    #np.savetxt("vector_fp32.txt", np.reshape(output_vector,())
     # print (input_fixed_arr.shape)
     # print (inputs.shape, labels, testlabel)
 
+    diff_ratio = np.divide(np.absolute(output_vector_fp - output_vector), np.absolute(output_vector_fp))
+    print (diff_ratio)
+    print ("The mean error is", np.mean(np.absolute(diff_ratio)))
+
+    num_bins = 64
+    output_vector = np.reshape(output_vector,(64))
+    output_vector = output_vector/(np.amax(np.absolute(output_vector)))
+    n, bins, patches = plt.hist(output_vector, num_bins, facecolor='blue', alpha=0.5)
+    plt.show()
+
+    output_vector_fp = np.reshape(output_vector_fp,(64))
+    output_vector_fp = output_vector_fp/(np.amax(np.absolute(output_vector_fp)))
+    n,bis,patches = plt.hist(output_vector_fp,num_bins, facecolor='blue', alpha =0.5)
+    plt.show()
     print_keys = "".join(str(key) + " " for key in dict1)
     print (print_keys)
+
     #emulate.Network(img)
 
 train(defaultParams)
