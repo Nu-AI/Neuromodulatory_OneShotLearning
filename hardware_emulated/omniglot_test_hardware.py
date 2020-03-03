@@ -209,6 +209,8 @@ def train(parameters):
         output_vector = emulate.Network(inputs[0], 3, 2, dict1)
         output_vector_fp = emulate.Network_fp(inputs[0], 3, 2, dict1)
         print (output_vector.shape, output_vector_fp.shape)
+
+        
     print ("the images went through the network")
     # print ("***************************************\n", output_vector)
     # print("\n ***************************************", output_vector_fp)
