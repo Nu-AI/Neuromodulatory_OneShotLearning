@@ -22,6 +22,7 @@ import ctypes, ctypes.util
 from ctypes import cdll
 
 sns.set()
+
 ##################################################################
 # The next section involves setting up the C++ wrappers for the  #
 # given convolutional operations in fixed point.                 #
@@ -63,7 +64,6 @@ sns.set()
 #     result = Fixedlib.Fixed_ACC(Product, shape)
 #     return result
 
-
 #################################################################
 # Sample stuff for debugging and testing the functionality      #
 #################################################################
@@ -95,8 +95,6 @@ l1_filter_new[1, :, :] = np.array([[[1,   0,  -1],
 l2_filter =  np.zeros((2,2,3,3))
 l2_filter[0,:,:,:] = l1_filter
 l2_filter[1,:,:,:] = l1_filter_new
-
-
 
 
 defaultParams = {
@@ -187,7 +185,6 @@ class omniglot_hd_emulation:
 # print (print_keys)
 # emulate.Network(img)
 
-
 def train(parameters):
     # Setup the parameter dictionary
     params = {}
@@ -202,15 +199,20 @@ def train(parameters):
 
     # Load the weights and the parameters of the network now
     dict1, tmpw, tmpalpha, tmpeta = emulate.read_weights()
-
+    print (dict1['alpha'].shape)
     #Iterate the images over the network now
     for num_test_sample in range(params['no_test_iters']):
         inputs, labels, testlabel = emulate.read_inputs(input_dataset)
-        output_vector = emulate.Network(inputs[0], 3, 2, dict1)
-        output_vector_fp = emulate.Network_fp(inputs[0], 3, 2, dict1)
-        print (output_vector.shape, output_vector_fp.shape)
+        for i in range(inputs.shape[0]-1):
+            output_vector = emulate.Network(inputs[i], 3, 2, dict1)
+            output_vector_fp = emulate.Network_fp(inputs[i], 3, 2, dict1)
+            print (output_vector.shape, output_vector_fp.shape)
+            print (inputs.shape, " ***************************\n", i)
+            final_weights = dict1['w']
+            final_alpha = dict1['alpha']
+            
 
-        
+
     print ("the images went through the network")
     # print ("***************************************\n", output_vector)
     # print("\n ***************************************", output_vector_fp)
@@ -220,8 +222,9 @@ def train(parameters):
     # print (inputs.shape, labels, testlabel)
 
     diff_ratio = np.divide(np.absolute(output_vector_fp - output_vector), np.absolute(output_vector_fp))
-    print (diff_ratio)
+    #print (diff_ratio)
     print ("The mean error is", np.mean(np.absolute(diff_ratio)))
+
 
     num_bins = 64
     output_vector = np.reshape(output_vector,(64))
@@ -235,7 +238,5 @@ def train(parameters):
     plt.show()
     print_keys = "".join(str(key) + " " for key in dict1)
     print (print_keys)
-
-    #emulate.Network(img)
 
 train(defaultParams)
