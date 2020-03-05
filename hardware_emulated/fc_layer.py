@@ -32,3 +32,10 @@ class FC_layer:
                 activation_fixed[i] += Fixed_mul(self.input_activs[j],plastic_wt_fixed[j][i],6,10)
 
             activation_fixed[i] = Fixed_to_Float2(activation_fixed[i],10)
+            if(inputlabel[i]==1):
+                activation[i] = activation[i]+1000
+                activation_fixed[i] = activation_fixed[i] + 1000
+        return activation
+
+
+    def softmax(self, activation):
