@@ -30,7 +30,7 @@ class approx_activation:
             return -1
 
 
-    def approx_sigmoid(input):
+    def approx_sigmoid(self,input):
 
         # Lets decide first which sub plots to break it down to
         if ( abs(input) >= 5 ):
@@ -42,7 +42,7 @@ class approx_activation:
         else:
             return 1
 
-    def approx_sigmoid_2(input):
+    def approx_sigmoid_2(self,input):
         if (input <= -2):
             return 0
         elif (input > -2 and input <2):
@@ -50,11 +50,11 @@ class approx_activation:
         else:
             return 1
 
-    def approx_tanh_2(input):
+    def approx_tanh_2(self,input):
         return 2*(approx_sigmoid_2(2*input)) - 1
 
 
-    def approx_tanh_3(input):
+    def approx_tanh_3(self,input):
         out = 0
         if abs(input) >= 3:
             out =  1
@@ -73,6 +73,6 @@ class approx_activation:
 
     def apply_act(self,input):
         if (self.activation =='tanh'):
-            return approx_tanh_3(input)
+            return self.approx_tanh_3(input)
         else:
-            return approx_sigmoid_2(input)
+            return self.approx_sigmoid_2(input)
