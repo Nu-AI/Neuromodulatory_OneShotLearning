@@ -108,9 +108,11 @@ class conv_3_3:
 
     def forward(self, filter):
 
+        activation = approx_activation(self.activation)
         feature_map_size = int((self.input_map.shape[1] - self.kernel_size) / (self.stride)) + 1
         temp_feature_map = np.zeros((feature_map_size, feature_map_size, self.nbfilters))
-
+        #new_feature_map = np.zeros_like(temp_feature_map)
+        func = lambda x:[activation.apply_act(i) for  i in np.nditer(x,op_flags=['readwrite'])]
         #Starting the convolutions
         count = 0
         for ftr in range(self.nbfilters):
@@ -129,10 +131,16 @@ class conv_3_3:
                     conv_map  = conv_map + self.conv_perform(self.input_map[:,:,channel], temp_filter[channel,:,:])
             else:
                 conv_map = self.conv_perform(self.input_map,temp_filter)
-            temp_feature_map[:,:,ftr] = conv_map + Fixed_to_Float(Float_to_Fixed(self.bias[ftr],6,10),10)
 
+            temp_feature_map[:,:,ftr] = conv_map + Fixed_to_Float(Float_to_Fixed(self.bias[ftr],6,10),10)
+            #new_feature_map[:,:,ftr] = func(temp_feature_map[:,:,ftr])
+        #new_feature_map = np.array(list(map(lambda x: activation.apply_act(x),temp_feature_map)))
+        new_feature_map = np.array(func(temp_feature_map)).reshape(temp_feature_map.shape)
+        print (new_feature_map.shape)
+        # new_feature_map.reshape(temp_feature_map.shape)
 
         return (temp_feature_map)
+
 
     ###############################################################
     # This method performs the actual convolutions. The selected  #
@@ -171,7 +179,7 @@ class conv_3_3:
                         val_in_float = Fixed_to_Float2(point_wise_mult_fixed, 10)
                 #Need to fix the fixed accumulator
                 #float_acc = Fixed_ACC(a,self.kernel_size*self.kernel_size)
-                feature_map[temp_counter_1][temp_counter_2] = activation.apply_act(point_wise_mult)
+                feature_map[temp_counter_1][temp_counter_2] = point_wise_mult
                 feature_map_fixed[temp_counter_1][temp_counter_2] = point_wise_mult_fixed
                 feature_map_float[temp_counter_1][temp_counter_2] = val_in_float
                 temp_counter_1 += 1
