@@ -5,9 +5,9 @@ print (a.shape)
 
 import matplotlib.pyplot as plt
 
-plt.plot(a,np.tanh(a))
-plt.grid(linestyle='-')
-plt.show()
+# plt.plot(a,np.tanh(a))
+# plt.grid(linestyle='-')
+# plt.show()
 
 
 class approx_activation:
