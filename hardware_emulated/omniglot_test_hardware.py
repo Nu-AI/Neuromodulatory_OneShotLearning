@@ -18,6 +18,7 @@ from weight_loader import *
 from input_generator import *
 
 from conv_fp32 import *
+from fc_layer import *
 import ctypes, ctypes.util
 from ctypes import cdll
 
@@ -107,7 +108,8 @@ defaultParams = {
     'learningrate': 1e-5,                              # The initial learning rate for the network
     'present_test': 1,                                 # Number of times we present the testing class
     'no_test_iters': 1,
-    'address': '../omniglot_dataset/omniglot/python/', # enter the path of the dataset here
+    'activation': 'tanh',
+    'address' : '../omniglot_dataset/omniglot/python/', # enter the path of the dataset here
     #'print_every': 10,  # After how many epochs
 }
 TEST_CLASSES = 100
@@ -138,21 +140,22 @@ class omniglot_hd_emulation:
         return dict1, tmpw, tmpalpha, tmpeta
 
     def Network(self, img, kernel_size, stride,dict):
-        conv1 = conv_3_3(img, kernel_size,stride,self.params['no_filters'],dict['cv1.bias'])
+        conv1 = conv_3_3(img, kernel_size,stride,self.params['no_filters'],dict['cv1.bias'],self.params['activation'])
         #print (conv1.forward(dict['cv1.weight']))
-        conv2 = conv_3_3(conv1.forward(dict['cv1.weight']), kernel_size,stride,self.params['no_filters'], dict['cv2.bias'])
-        conv3 = conv_3_3(conv2.forward(dict['cv2.weight']), kernel_size,stride,self.params['no_filters'], dict['cv3.bias'])
-        conv4 = conv_3_3(conv3.forward(dict['cv3.weight']), kernel_size,stride,self.params['no_filters'], dict['cv4.bias'])
+        conv2 = conv_3_3(conv1.forward(dict['cv1.weight']), kernel_size,stride,self.params['no_filters'], dict['cv2.bias'],self.params['activation'])
+        conv3 = conv_3_3(conv2.forward(dict['cv2.weight']), kernel_size,stride,self.params['no_filters'], dict['cv3.bias'],self.params['activation'])
+        conv4 = conv_3_3(conv3.forward(dict['cv3.weight']), kernel_size,stride,self.params['no_filters'], dict['cv4.bias'],self.params['activation'])
 
         print (conv4.forward(dict['cv4.weight']), "This is the final conv layer output")
+
         return conv4.forward(dict['cv4.weight'])
 
     def Network_fp(self, img, kernel_size, stride, dict):
-        conv1 = conv_3_3_fp(img, kernel_size,stride,self.params['no_filters'],dict['cv1.bias'])
+        conv1 = conv_3_3_fp(img, kernel_size,stride,self.params['no_filters'],dict['cv1.bias'], self.params['activation'])
         #print (conv1.forward(dict['cv1.weight']))
-        conv2 = conv_3_3_fp(conv1.forward(dict['cv1.weight']), kernel_size,stride,self.params['no_filters'], dict['cv2.bias'])
-        conv3 = conv_3_3_fp(conv2.forward(dict['cv2.weight']), kernel_size,stride,self.params['no_filters'], dict['cv3.bias'])
-        conv4 = conv_3_3_fp(conv3.forward(dict['cv3.weight']), kernel_size,stride,self.params['no_filters'], dict['cv4.bias'])
+        conv2 = conv_3_3_fp(conv1.forward(dict['cv1.weight']), kernel_size,stride,self.params['no_filters'], dict['cv2.bias'],self.params['activation'])
+        conv3 = conv_3_3_fp(conv2.forward(dict['cv2.weight']), kernel_size,stride,self.params['no_filters'], dict['cv3.bias'],self.params['activation'])
+        conv4 = conv_3_3_fp(conv3.forward(dict['cv3.weight']), kernel_size,stride,self.params['no_filters'], dict['cv4.bias'], self.params['activation'])
 
         print (conv4.forward(dict['cv4.weight']), "This is the final conv layer output")
         return conv4.forward(dict['cv4.weight'])
@@ -210,8 +213,6 @@ def train(parameters):
             print (inputs.shape, " ***************************\n", i)
             final_weights = dict1['w']
             final_alpha = dict1['alpha']
-            
-
 
     print ("the images went through the network")
     # print ("***************************************\n", output_vector)
@@ -225,16 +226,18 @@ def train(parameters):
     #print (diff_ratio)
     print ("The mean error is", np.mean(np.absolute(diff_ratio)))
 
+    fig, ax = plt.subplots(1,2,tight_layout=True)
+
 
     num_bins = 64
     output_vector = np.reshape(output_vector,(64))
     output_vector = output_vector/(np.amax(np.absolute(output_vector)))
-    n, bins, patches = plt.hist(output_vector, num_bins, facecolor='blue', alpha=0.5)
-    plt.show()
+    n, bins, patches = ax[0].hist(output_vector, num_bins, facecolor='blue', alpha=0.5)
+    # plt.show()
 
     output_vector_fp = np.reshape(output_vector_fp,(64))
     output_vector_fp = output_vector_fp/(np.amax(np.absolute(output_vector_fp)))
-    n,bis,patches = plt.hist(output_vector_fp,num_bins, facecolor='blue', alpha =0.5)
+    n,bis,patches = ax[1].hist(output_vector_fp,num_bins, facecolor='green', alpha =0.5)
     plt.show()
     print_keys = "".join(str(key) + " " for key in dict1)
     print (print_keys)
