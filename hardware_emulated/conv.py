@@ -136,10 +136,10 @@ class conv_3_3:
             #new_feature_map[:,:,ftr] = func(temp_feature_map[:,:,ftr])
         #new_feature_map = np.array(list(map(lambda x: activation.apply_act(x),temp_feature_map)))
         new_feature_map = np.array(func(temp_feature_map)).reshape(temp_feature_map.shape)
-        print (new_feature_map.shape)
+        reg_feature_map = np.tanh(temp_feature_map)
         # new_feature_map.reshape(temp_feature_map.shape)
 
-        return (temp_feature_map)
+        return (new_feature_map)
 
 
     ###############################################################
