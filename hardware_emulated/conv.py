@@ -112,7 +112,7 @@ class conv_3_3:
         feature_map_size = int((self.input_map.shape[1] - self.kernel_size) / (self.stride)) + 1
         temp_feature_map = np.zeros((feature_map_size, feature_map_size, self.nbfilters))
         #new_feature_map = np.zeros_like(temp_feature_map)
-        func = lambda x:[activation.apply_act(i) for  i in np.nditer(x,op_flags=['readwrite'])]
+        func = lambda x:[activation.apply_act(i) for i in np.nditer(x,op_flags=['readwrite'])]
         #Starting the convolutions
         count = 0
         for ftr in range(self.nbfilters):
