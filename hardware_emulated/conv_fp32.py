@@ -7,7 +7,6 @@ from skimage.transform import rescale, resize
 
 import ctypes, ctypes.util
 from ctypes import cdll
-
 from activation_approx import *
 ##################################################################
 # The next section involves setting up the C++ wrappers for the  #
@@ -87,7 +86,7 @@ l2_filter[1,:,:,:] = l1_filter_new
 # number of filters for that particular layer.                     #
 ####################################################################
 
-class conv_3_3:
+class conv_3_3_fp:
 
     def __init__(self, input_map, kernel_size, stride, nbfilters, bias, activation):
         self.nbfilters = nbfilters
@@ -97,26 +96,24 @@ class conv_3_3:
         self.filter_array = np.random.randn(nbfilters, 3, 3) / 9
         self.bias = bias
         self.activation = activation
+
     ###############################################################
     # Convolution operation handler. Regulates the number of      #
     # convolutions taking place and is responsible for generating #
     # the output feature maps                                     #
     ###############################################################
 
-
-
-
     def forward(self, filter):
 
         activation = approx_activation(self.activation)
         feature_map_size = int((self.input_map.shape[1] - self.kernel_size) / (self.stride)) + 1
         temp_feature_map = np.zeros((feature_map_size, feature_map_size, self.nbfilters))
-        #new_feature_map = np.zeros_like(temp_feature_map)
-        func = lambda x:[activation.apply_act(i) for i in np.nditer(x,op_flags=['readwrite'])]
+        #new_feature_map = np.zeros_like(temo_feature_map)
+        func  = lambda x:[activation.apply_act(i) for i in np.nditer(x, op_flags=['readwrite'])]
         #Starting the convolutions
         count = 0
         for ftr in range(self.nbfilters):
-            #print ("Entered thhe looop *******************", self.nbfilters, ftr)
+
             temp_filter = filter[ftr,:]
             #print (temp_filter.shape[0], self.input_map.shape, "the filters shape")
             if (temp_filter.shape[0] == 1):
@@ -131,17 +128,9 @@ class conv_3_3:
                     conv_map  = conv_map + self.conv_perform(self.input_map[:,:,channel], temp_filter[channel,:,:])
             else:
                 conv_map = self.conv_perform(self.input_map,temp_filter)
-
-            temp_feature_map[:,:,ftr] = conv_map + Fixed_to_Float(Float_to_Fixed(self.bias[ftr],6,10),10)
-
-            #new_feature_map[:,:,ftr] = func(temp_feature_map[:,:,ftr])
-        #new_feature_map = np.array(list(map(lambda x: activation.apply_act(x),temp_feature_map)))
+            temp_feature_map[:,:,ftr] = conv_map + self.bias[ftr]
         new_feature_map = np.array(func(temp_feature_map)).reshape(temp_feature_map.shape)
-        reg_feature_map = np.tanh(temp_feature_map)
-        # new_feature_map.reshape(temp_feature_map.shape)
-
         return (new_feature_map)
-
 
     ###############################################################
     # This method performs the actual convolutions. The selected  #
@@ -153,7 +142,7 @@ class conv_3_3:
     def conv_perform(self, input_map, filter):
 
         point_wise_mult = 0
-        activation = approx_activation(self.activation)
+
         temp_counter_1  = 0
         temp_counter_2  = 0
         feature_map_size = int((input_map.shape[1] - self.kernel_size) / (self.stride)) + 1
@@ -190,19 +179,19 @@ class conv_3_3:
             temp_counter_1 = 0
         temp_array = feature_map - feature_map_float
         #print (temp_array, "the difference in precision values")
-        return feature_map_float
+        return feature_map
 
 # bias = np.array([0.05, -0.02])
 # print (Fixed_to_Float(Float_to_Fixed(bias[0],4,12),12), "the converted bias value", bias[0])
-# conv1 = conv_3_3(img, 3,2,2, bias,activation='tanh')
+# conv1 = conv_3_3(img, 3,2,2, bias)
 # feature_maps = conv1.forward(l1_filter)
 # #print (feature_maps[:,:,0], feature_maps.shape)
-# conv2  = conv_3_3(feature_maps, 3,2,2,bias,activation='tanh')
+# conv2  = conv_3_3(feature_maps, 3,2,2,bias)
 # new_feature_maps= conv2.forward(l2_filter)
 # #print(new_feature_maps,new_feature_maps.shape)
-# conv3  = conv_3_3(new_feature_maps, 3,2,2,bias,activation='tanh')
+# conv3  = conv_3_3(new_feature_maps, 3,2,2,bias)
 # updated_f_maps = conv3.forward(l2_filter)
 # #print (updated_f_maps,updated_f_maps.shape)
-# conv4 = conv_3_3(updated_f_maps,3,2,2,bias,activation='tanh')
+# conv4 = conv_3_3(updated_f_maps,3,2,2,bias)
 # updated_final_maps = conv4.forward(l2_filter)
-#print(updated_final_maps,updated_final_maps.shape)
+# #print(updated_final_maps,updated_final_maps.shape)
