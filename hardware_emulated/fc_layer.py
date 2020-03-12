@@ -21,6 +21,7 @@ class FC_layer:
         plastic_wt = np.zeros_like(weights)
         plastic_wt_fixed = np.zeros_like(weights)
         activation = np.zeros((weights.shape[1]))
+        activation_fixed = np.zeros((weights.shape[1]))
         for i in  range(weights.shape[1]):
             for j in range(weights.shape[0]):
                 plastic_wt[j][i] = weights[j][i] + alpha[j][i]*mod[j][i]
@@ -31,22 +32,25 @@ class FC_layer:
         for i in range(weights.shape[1]):
             for j in range(weights.shape[0]):
                 activation[i] += self.input_activs[j]*plastic_wt[j][i]
-                activation_fixed[i] += Fixed_mul(self.input_activs[j],plastic_wt_fixed[j][i],6,10)
+                activation_fixed[i] += Fixed_Mul(self.input_activs[j],plastic_wt_fixed[j][i],6,10)
 
             activation_fixed[i] = Fixed_to_Float2(activation_fixed[i],10)
-            if(inputlabel[i]==1):
+            if(self.inputlabel[i]==1):
                 activation[i] = activation[i]+1000
                 activation_fixed[i] = activation_fixed[i] + 1000
         return activation
 
 
     def softmax(self, activation):
-        return np.array(list(map(lambda x: 0 if x<500 else 1, activation)))
+        convert_arr =  np.array(list(map(lambda x: 0 if x<500 else 1, activation)))
+        if (not np.any(convert_arr)):
+            convert_arr[np.argmax(activation)] = 1
+        return convert_arr
 
     def update_trace(self, activation_out, mod):
         mod_fixed = np.zeros_like(mod)
         for i in range(mod.shape[0]):
-            inter2 = Float_to_Fixed(self.input_activs[i])
+            inter2 = Float_to_Fixed(self.input_activs[i],6,10)
             for j in range(mod.shape[1]):
                 if (activation_out[j] != 0):
                     mod[i][j] = mod[i][j] + self.eta*(activation_out[j])*(self.input_activs[i] \
@@ -54,12 +58,12 @@ class FC_layer:
                     temp = Fixed_Mul(activation_out[j],mod[i][j],6,10)
                     temp2 = Fixed_to_Float2((inter2 - temp),10)
                     temp3 = Fixed_to_Float2(Fixed_Mul(self.eta,activation_out[j],6,10),10)
-                    mod_fixed[i][j] = Float_to_Fixed(mod[i][j]) + Fixed_mul(temp2, temp3, 6 ,10)
-                    mod_fixed[i][j] = Fixed_to_Float2(mod_fixed[i][j])
-# alternate solution
-                     #mod_fixed[i][j] = mod[i][j] + Fixed_to_Float2(Fixed_mul(temp2, temp3, 6 ,10),10)
+                    mod_fixed[i][j] = Float_to_Fixed(mod[i][j] + Fixed_Mul(temp2, temp3, 6 ,10),6,10)
+                    mod_fixed[i][j] = Fixed_to_Float2(mod_fixed[i][j],10)
+                    # alternate solution
+                    #mod_fixed[i][j] = mod[i][j] + Fixed_to_Float2(Fixed_mul(temp2, temp3, 6 ,10),10)
                 else:
-                     #mod[i][j] = mod[i][j]
+                    #mod[i][j] = mod[i][j]
                      mod_fixed[i][j] = mod[i][j]
 
         return mod
