@@ -146,8 +146,7 @@ class omniglot_hd_emulation:
         conv3 = conv_3_3(conv2.forward(dict['cv2.weight']), kernel_size,stride,self.params['no_filters'], dict['cv3.bias'],self.params['activation'])
         conv4 = conv_3_3(conv3.forward(dict['cv3.weight']), kernel_size,stride,self.params['no_filters'], dict['cv4.bias'],self.params['activation'])
 
-        print (conv4.forward(dict['cv4.weight']), "This is the final conv layer output")
-
+        #print (conv4.forward(dict['cv4.weight']), "This is the final conv layer output"
         return conv4.forward(dict['cv4.weight'])
 
     def Network_fp(self, img, kernel_size, stride, dict):
@@ -159,6 +158,13 @@ class omniglot_hd_emulation:
 
         print (conv4.forward(dict['cv4.weight']), "This is the final conv layer output")
         return conv4.forward(dict['cv4.weight'])
+
+    def plastic_layer(self,input_activations,label,dict,mod):
+        fully_connected = FC_layer(input_activations, label, dict['eta'])
+        #mod = np.zeros_like(dict['w'])
+        output =fully_connected.softmax(fully_connected.forward(dict['w'],dict['alpha'],mod))
+        mod = fully_connected.update_trace(output,mod)
+        return output,mod
 
     def inputs_to_fixed(self, inputs):
         input_fixed_arr = np.empty_like(inputs)
@@ -202,18 +208,32 @@ def train(parameters):
 
     # Load the weights and the parameters of the network now
     dict1, tmpw, tmpalpha, tmpeta = emulate.read_weights()
-    print (dict1['alpha'].shape)
+
+    print (dict1['alpha'].shape,dict1['w'].shape)
+    temp_arr = np.zeros_like(dict1['w'])
+    print(temp_arr.shape)
+    acc_count =0
     #Iterate the images over the network now
     for num_test_sample in range(params['no_test_iters']):
+        mod = np.zeros_like(dict1['w'])
+
         inputs, labels, testlabel = emulate.read_inputs(input_dataset)
-        for i in range(inputs.shape[0]-1):
+        final_out = np.zeros_like(testlabel)
+        for i in range(inputs.shape[0]):
             output_vector = emulate.Network(inputs[i], 3, 2, dict1)
             output_vector_fp = emulate.Network_fp(inputs[i], 3, 2, dict1)
-            print (output_vector.shape, output_vector_fp.shape)
-            print (inputs.shape, " ***************************\n", i)
+            output_vector_fp= np.reshape(output_vector_fp,(params['no_filters']))
+            final_out,mod = emulate.plastic_layer(output_vector_fp, labels[i], dict1,mod )
+            print (output_vector.shape, output_vector_fp.shape,final_out,labels[i], testlabel)
+
+            print (inputs.shape, labels.shape, " ***************************\n", i)
             final_weights = dict1['w']
             final_alpha = dict1['alpha']
-
+        if (np.argmax(final_out) == np.argmax(testlabel)):
+            print ("=====>")
+            count +=1
+        else:
+            print ("Mistake")
     print ("the images went through the network")
     # print ("***************************************\n", output_vector)
     # print("\n ***************************************", output_vector_fp)
