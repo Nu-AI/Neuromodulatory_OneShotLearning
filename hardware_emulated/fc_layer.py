@@ -29,6 +29,7 @@ class FC_layer:
                 plastic_wt_fixed[j][i] = Fixed_to_Float2(plastic_wt_fixed[j][i],10)
                 # Alternate method
                 #plastic_wt_fixed[j][i] = weights[j][i] + Fixed_to_Float2(Fixed_Mul(alpha[j][i],mod[j][i],6,10),10)
+
         for i in range(weights.shape[1]):
             for j in range(weights.shape[0]):
                 activation[i] += self.input_activs[j]*plastic_wt[j][i]
@@ -38,6 +39,7 @@ class FC_layer:
             if(self.inputlabel[i]==1):
                 activation[i] = activation[i]+1000
                 activation_fixed[i] = activation_fixed[i] + 1000
+        print (activation, "These are the intermediate activations")
         return activation
 
 
@@ -65,5 +67,6 @@ class FC_layer:
                 else:
                     #mod[i][j] = mod[i][j]
                      mod_fixed[i][j] = mod[i][j]
+
 
         return mod
