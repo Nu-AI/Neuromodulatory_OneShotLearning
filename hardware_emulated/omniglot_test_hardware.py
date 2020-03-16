@@ -107,7 +107,7 @@ defaultParams = {
     'imagesize': 31,                                   # The size of the 2D images to be reshaped to
     'learningrate': 1e-5,                              # The initial learning rate for the network
     'present_test': 1,                                 # Number of times we present the testing class
-    'no_test_iters': 1,
+    'no_test_iters': 100,
     'activation': 'tanh',
     'address' : '../omniglot_dataset/omniglot/python/', # enter the path of the dataset here
     #'print_every': 10,  # After how many epochs
@@ -156,7 +156,7 @@ class omniglot_hd_emulation:
         conv3 = conv_3_3_fp(conv2.forward(dict['cv2.weight']), kernel_size,stride,self.params['no_filters'], dict['cv3.bias'],self.params['activation'])
         conv4 = conv_3_3_fp(conv3.forward(dict['cv3.weight']), kernel_size,stride,self.params['no_filters'], dict['cv4.bias'], self.params['activation'])
 
-        print (conv4.forward(dict['cv4.weight']), "This is the final conv layer output")
+        #print (conv4.forward(dict['cv4.weight']), "This is the final conv layer output")
         return conv4.forward(dict['cv4.weight'])
 
     def plastic_layer(self,input_activations,label,dict,mod):
@@ -223,6 +223,7 @@ def train(parameters):
             output_vector = emulate.Network(inputs[i], 3, 2, dict1)
             output_vector_fp = emulate.Network_fp(inputs[i], 3, 2, dict1)
             output_vector_fp= np.reshape(output_vector_fp,(params['no_filters']))
+            output_vector= np.reshape(output_vector,(params['no_filters']))
             final_out,mod = emulate.plastic_layer(output_vector_fp, labels[i], dict1,mod )
             print (output_vector.shape, output_vector_fp.shape,final_out,labels[i], testlabel)
 
@@ -230,11 +231,13 @@ def train(parameters):
             final_weights = dict1['w']
             final_alpha = dict1['alpha']
         if (np.argmax(final_out) == np.argmax(testlabel)):
-            print ("=====>")
-            count +=1
+
+            acc_count +=1
+            print ("=====>",acc_count)
         else:
             print ("Mistake")
     print ("the images went through the network")
+    print ("=====>",acc_count)
     # print ("***************************************\n", output_vector)
     # print("\n ***************************************", output_vector_fp)
 
