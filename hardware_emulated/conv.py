@@ -140,7 +140,7 @@ class conv_3_3:
         reg_feature_map = np.tanh(temp_feature_map)
         # new_feature_map.reshape(temp_feature_map.shape)
 
-        return (new_feature_map)
+        return (reg_feature_map)
 
 
     ###############################################################
