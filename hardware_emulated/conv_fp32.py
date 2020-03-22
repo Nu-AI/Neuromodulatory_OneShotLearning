@@ -130,7 +130,8 @@ class conv_3_3_fp:
                 conv_map = self.conv_perform(self.input_map,temp_filter)
             temp_feature_map[:,:,ftr] = conv_map + self.bias[ftr]
         new_feature_map = np.array(func(temp_feature_map)).reshape(temp_feature_map.shape)
-        return (new_feature_map)
+        reg_feature_map = np.tanh(temp_feature_map)
+        return (reg_feature_map)
 
     ###############################################################
     # This method performs the actual convolutions. The selected  #
@@ -142,7 +143,6 @@ class conv_3_3_fp:
     def conv_perform(self, input_map, filter):
 
         point_wise_mult = 0
-
         temp_counter_1  = 0
         temp_counter_2  = 0
         feature_map_size = int((input_map.shape[1] - self.kernel_size) / (self.stride)) + 1
