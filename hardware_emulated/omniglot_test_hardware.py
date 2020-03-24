@@ -176,7 +176,9 @@ class omniglot_hd_emulation:
         return output,mod
 
     def torch_plastic_output(self, input_activations, label, mod_torch):
+        input_activations = np.reshape(input_activations, (1,1,self.params['imagesize'], self.params['imagesize']))
         input_activations = torch.from_numpy(input_activations).type(torch.cuda.FloatTensor)
+        label = np.reshape(label, (1,self.params['no_classes']))
         label = torch.from_numpy(label).type(torch.cuda.FloatTensor)
         net = Network(self.params)
         output_vector, final_out, mod_torch = net(Variable(input_activations, requires_grad=False), Variable(label, requires_grad=False), mod_torch)
@@ -225,7 +227,8 @@ def train(parameters):
     print (dict1['alpha'].shape,dict1['w'].shape)
     temp_arr = np.zeros_like(dict1['w'])
     print(temp_arr.shape)
-    acc_count =0
+    acc_count = 0
+    new_acc_count = 0
     #Iterate the images over the network now
     for num_test_sample in range(params['no_test_iters']):
         mod = np.zeros_like(dict1['w'])
@@ -250,8 +253,12 @@ def train(parameters):
             print ("=====>",acc_count)
         else:
             print ("Mistake")
+        if (np.argmax(torch_final_out.data.cpu().numpy()[0]) == np.argmax(testlabel)):
+            new_acc_count +=1
+        else:
+            print ("Original mistake")
     print ("the images went through the network")
-    print ("=====>",acc_count)
+    print ("=====>",acc_count, "=====>", new_acc_count)
     # print ("***************************************\n", output_vector)
     # print("\n ***************************************", output_vector_fp)
 
