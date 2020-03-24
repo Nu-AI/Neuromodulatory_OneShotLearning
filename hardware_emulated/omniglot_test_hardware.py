@@ -16,6 +16,7 @@ import matplotlib.pyplot as plt
 from conv import *
 from weight_loader import *
 from input_generator import *
+from torch_net import *
 
 from conv_fp32 import *
 from fc_layer import *
@@ -114,13 +115,14 @@ defaultParams = {
 }
 TEST_CLASSES = 100
 
+
+
 class omniglot_hd_emulation:
 
     def __init__(self, params):
         self.params = params
         self.params['steps'] =  params['no_shots']*(params['no_classes']) + params['present_test']
         print ("Started the emulation")
-
 
     def read_input_dataset(self):
         input_val = input_generator()
@@ -138,6 +140,13 @@ class omniglot_hd_emulation:
         dict1, tmpw, tmpalpha, tmpeta =weight_load.read_fc_params(1)
         print ("Done loading weights")
         return dict1, tmpw, tmpalpha, tmpeta
+
+    def init_net_torch(self):
+        suffix="_Wactiv_tanh_alpha_free_flare_0_gamma_0.666_imgsize_31_ipd_0_lr_3e-05_nbclasses_5_nbf_64_nbiter_5000000_nbshots_1_prestime_1_prestimetest_1_rule_oja_steplr_1000000.0_rngseed_"+str(1)+"_5000000"
+        net = Network(self.params)
+        net.load_state_dict(torch.load('../torchmodels/torchmodel'+suffix + '.txt'))
+        return net.initialZeroHebb()
+
 
     def Network(self, img, kernel_size, stride,dict):
         conv1 = conv_3_3(img, kernel_size,stride,self.params['no_filters'],dict['cv1.bias'],self.params['activation'])
@@ -166,16 +175,20 @@ class omniglot_hd_emulation:
         mod = fully_connected.update_trace(output,mod)
         return output,mod
 
+    def torch_plastic_output(self, input_activations, label, mod_torch):
+        input_activations = torch.from_numpy(input_activations).type(torch.cuda.FloatTensor)
+        label = torch.from_numpy(label).type(torch.cuda.FloatTensor)
+        net = Network(self.params)
+        output_vector, final_out, mod_torch = net(Variable(input_activations, requires_grad=False), Variable(label, requires_grad=False), mod_torch)
+        return output_vector, final_out, mod_torch
+
     def inputs_to_fixed(self, inputs):
         input_fixed_arr = np.empty_like(inputs)
         for i in range(self.params['steps']):
             input_list = list(np.reshape(inputs[i,:,:],(self.params['imagesize']*self.params['imagesize'])))
-            #print (temp2_array.shape)
-            #input_list = temp2_array.tolist()
             input_fixed = list(map(lambda x: Float_to_Fixed(x,2,12), input_list))
             input_fixed = np.reshape(np.array(input_fixed),(self.params['imagesize'], self.params['imagesize']) )
             input_fixed_arr[i] = input_fixed
-
         return input_fixed_arr
 
 # params = {}
@@ -216,23 +229,24 @@ def train(parameters):
     #Iterate the images over the network now
     for num_test_sample in range(params['no_test_iters']):
         mod = np.zeros_like(dict1['w'])
-
+        mod_torch = emulate.init_net_torch()
         inputs, labels, testlabel = emulate.read_inputs(input_dataset)
         final_out = np.zeros_like(testlabel)
         for i in range(inputs.shape[0]):
             output_vector = emulate.Network(inputs[i], 3, 2, dict1)
             output_vector_fp = emulate.Network_fp(inputs[i], 3, 2, dict1)
-            output_vector_fp= np.reshape(output_vector_fp,(params['no_filters']))
-            output_vector= np.reshape(output_vector,(params['no_filters']))
+            output_vector_fp = np.reshape(output_vector_fp,(params['no_filters']))
+            output_vector = np.reshape(output_vector,(params['no_filters']))
             final_out,mod = emulate.plastic_layer(output_vector_fp, labels[i], dict1,mod )
+            torch_output_vector, torch_final_out, mod_torch = emulate.torch_plastic_output(inputs[i], labels[i], mod_torch)
             print (output_vector.shape, output_vector_fp.shape,final_out,labels[i], testlabel)
-
-            print (inputs.shape, labels.shape, " ***************************\n", i)
+            print ("torch outputs")
+            print (torch_output_vector.shape, torch_final_out)
+            print (inputs.shape, labels.shape, " ****************************\n", i)
             final_weights = dict1['w']
             final_alpha = dict1['alpha']
         if (np.argmax(final_out) == np.argmax(testlabel)):
-
-            acc_count +=1
+            acc_count += 1
             print ("=====>",acc_count)
         else:
             print ("Mistake")
@@ -250,7 +264,6 @@ def train(parameters):
     print ("The mean error is", np.mean(np.absolute(diff_ratio)))
 
     fig, ax = plt.subplots(1,2,tight_layout=True)
-
 
     num_bins = 64
     output_vector = np.reshape(output_vector,(64))
