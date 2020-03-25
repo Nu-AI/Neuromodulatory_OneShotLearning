@@ -1,7 +1,12 @@
+import pdb
 import torch
+import torch.nn as nn
+from torch.autograd import Variable
+import click
 import numpy as np
-
-
+from numpy import random
+import torch.nn.functional as F
+from torch import optim
 
 
 class Network(nn.Module):
@@ -18,8 +23,6 @@ class Network(nn.Module):
         self.cv2 = torch.nn.Conv2d(params['no_filters'] , params['no_filters'] , 3, stride=2).cuda()
         self.cv3 = torch.nn.Conv2d(params['no_filters'] , params['no_filters'] , 3, stride=2).cuda()
         self.cv4 = torch.nn.Conv2d(params['no_filters'] ,  params['no_filters'], 3, stride=2).cuda()
-
-
         self.w =  torch.nn.Parameter((.01 * torch.randn(params['no_filters'], params['no_classes'])).cuda(), requires_grad=True)
         #self.w =  torch.nn.Parameter((.01 * torch.rand(params['plastsize'], params['no_classes'])).cuda(), requires_grad=True)
         #if params['alpha'] == 'free':
@@ -62,12 +65,14 @@ class Network(nn.Module):
         # if self.rule == 'hebb':
         #     hebb = (1 - self.eta) * hebb + self.eta * torch.bmm(activin.unsqueeze(2), activout.unsqueeze(1))[0] # bmm used to implement outer product; remember activs have a leading singleton dimension
         # elif self.rule == 'oja':
+        print ("\n", hebb, " \n The trace value before \n")
         hebb = hebb + self.eta * torch.mul((activin[0].unsqueeze(1) - torch.mul(hebb , activout[0].unsqueeze(0))) , activout[0].unsqueeze(0))  # Oja's rule. Remember that yin, yout are row vectors (dim (1,N)). Also, broadcasting!
+        print ("\n", hebb, " \n The trace value after \n")
         # else:
         #     raise ValueError("Must select one learning rule ('hebb' or 'oja')")
-
-        return activout, hebb
+        print (self.eta, "The eta value being read from the results file")
+        return activin, activout, hebb
 
     def initialZeroHebb(self):
         #return Variable(torch.zeros(self.params['plastsize'], self.params['no_classes']).type(ttype))
-        return Variable(torch.zeros(self.params['no_filters'], self.params['no_classes']).type(ttype))
+        return Variable(torch.zeros(self.params['no_filters'], self.params['no_classes']).type(torch.cuda.FloatTensor))
