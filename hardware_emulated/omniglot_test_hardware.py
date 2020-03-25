@@ -144,12 +144,11 @@ class omniglot_hd_emulation:
     def init_net_torch(self):
         suffix="_Wactiv_tanh_alpha_free_flare_0_gamma_0.666_imgsize_31_ipd_0_lr_3e-05_nbclasses_5_nbf_64_nbiter_5000000_nbshots_1_prestime_1_prestimetest_1_rule_oja_steplr_1000000.0_rngseed_"+str(1)+"_5000000"
         net = Network(self.params)
-        net.load_state_dict(torch.load('../torchmodels/torchmodel'+suffix + '.txt'))
+        net.load_state_dict(torch.load('../torchmodels/torchmodel'+ suffix + '.txt'))
         return net
 
     def init_mod_param(self,net):
         return net.initialZeroHebb()
-
 
     def Network(self, img, kernel_size, stride,dict):
         conv1 = conv_3_3(img, kernel_size,stride,self.params['no_filters'],dict['cv1.bias'],self.params['activation'])
@@ -260,13 +259,27 @@ def train(parameters):
             output_vector = emulate.Network(inputs[i], 3, 2, dict1)
             output_vector_fp = emulate.Network_fp(inputs[i], 3, 2, dict1)
             output_vector_fp = np.reshape(output_vector_fp,(params['no_filters']))
+
             output_vector = np.reshape(output_vector,(params['no_filters']))
-            final_out,mod = emulate.plastic_layer(output_vector_fp, labels[i], dict1,mod )
+            # final_out,mod = emulate.plastic_layer(output_vector_fp, labels[i], dict1,mod )
+            print (dict1['eta'], "The eta value used in the emulated network \n")
+
             input_activations, label = emulate.torch_plastic_output(inputs[i], labels[i], mod_torch)
             torch_output_vector, torch_final_out, mod_torch = net(Variable(input_activations, requires_grad=False), Variable(label, requires_grad=False), mod_torch)
-            print (output_vector.shape, output_vector_fp.shape,final_out,labels[i], testlabel)
+
+            #print (output_vector.shape, output_vector_fp.shape,final_out,labels[i], testlabel)
             print ("torch outputs")
             print (torch_output_vector.shape, torch_final_out,"\n#####################\n")
+
+            new_output_vector = torch_output_vector.cpu().detach().numpy().reshape((64))
+            final_out,mod = emulate.plastic_layer(output_vector_fp, labels[i], dict1, mod)
+            difference = new_output_vector - output_vector_fp
+            print ("the difference in activations \n \n", difference)
+
+            new_mod_torch = mod_torch.cpu().detach().numpy()
+            trace_diff = new_mod_torch - mod
+            #print ("The difference in traces \n",trace_diff)
+
             print (inputs.shape, labels.shape, " ****************************\n", i)
             final_weights = dict1['w']
             final_alpha = dict1['alpha']
