@@ -68,13 +68,20 @@ class FC_layer:
         #             #mod[i][j] = mod[i][j]
         #              mod_fixed[i][j] = mod[i][j]
         inter_mod = np.zeros((mod.shape[0],1))
+        inter_temp = 0
+
+        #These loops are calculating the inner multiplicative factors
+        # These take the hadamard prodcut of the modulatry trace with the output input_activations
+        # Then the resultant matrix is subtracted from the input activations to the layer (feature vector)
         for i in range(mod.shape[0]):
             for j in range(mod.shape[1]):
-                inter_mod[i] += mod[i][j]*activation_out[j]
-            inter_mod[i] = self.input_activs[i] - inter_mod[i]
+                inter_temp += mod[i][j]*activation_out[j]   # accumulating partial sum
+            inter_mod[i] = self.input_activs[i] - inter_temp
+            inter_temp = 0
 
         for i in range(mod.shape[0]):
             for j in range(mod.shape[1]):
-                mod[i][j] = inter_mod[i]*activation_out[j]
-                mod[i][j] = self.eta*mod[i][j]
+                temp = inter_mod[i]*activation_out[j]   # saving the intermediate value
+                mod[i][j] = mod[i][j] + self.eta*temp
+        print ("\n\n",mod,"\nThis is the emulated trace value after learning \n\n")
         return mod
