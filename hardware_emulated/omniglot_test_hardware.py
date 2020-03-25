@@ -24,7 +24,7 @@ import ctypes, ctypes.util
 from ctypes import cdll
 
 sns.set()
-
+np.set_printoptions(threshold=np.inf)
 ##################################################################
 # The next section involves setting up the C++ wrappers for the  #
 # given convolutional operations in fixed point.                 #
@@ -145,6 +145,9 @@ class omniglot_hd_emulation:
         suffix="_Wactiv_tanh_alpha_free_flare_0_gamma_0.666_imgsize_31_ipd_0_lr_3e-05_nbclasses_5_nbf_64_nbiter_5000000_nbshots_1_prestime_1_prestimetest_1_rule_oja_steplr_1000000.0_rngseed_"+str(1)+"_5000000"
         net = Network(self.params)
         net.load_state_dict(torch.load('../torchmodels/torchmodel'+suffix + '.txt'))
+        return net
+
+    def init_mod_param(self,net):
         return net.initialZeroHebb()
 
 
@@ -180,9 +183,9 @@ class omniglot_hd_emulation:
         input_activations = torch.from_numpy(input_activations).type(torch.cuda.FloatTensor)
         label = np.reshape(label, (1,self.params['no_classes']))
         label = torch.from_numpy(label).type(torch.cuda.FloatTensor)
-        net = Network(self.params)
-        output_vector, final_out, mod_torch = net(Variable(input_activations, requires_grad=False), Variable(label, requires_grad=False), mod_torch)
-        return output_vector, final_out, mod_torch
+        #net = Network(self.params)
+        #output_vector, final_out, mod_torch = net(Variable(input_activations, requires_grad=False), Variable(label, requires_grad=False), mod_torch)
+        return input_activations, label
 
     def inputs_to_fixed(self, inputs):
         input_fixed_arr = np.empty_like(inputs)
@@ -212,9 +215,21 @@ class omniglot_hd_emulation:
 def train(parameters):
     # Setup the parameter dictionary
     params = {}
+    new_params = {}
+    new_params.update(defaultParams)
     params.update(defaultParams)
     print (params)
 
+
+    suffix="_Wactiv_tanh_alpha_free_flare_0_gamma_0.666_imgsize_31_ipd_0_lr_3e-05_nbclasses_5_nbf_64_nbiter_5000000_nbshots_1_prestime_1_prestimetest_1_rule_oja_steplr_1000000.0_rngseed_"+str(1)+"_5000000"
+    with open('../results/results'+suffix+'.dat', 'rb') as fo:
+        tmpw = torch.nn.Parameter(torch.from_numpy(pickle.load(fo)).type(torch.cuda.FloatTensor))
+        tmpalpha = torch.nn.Parameter(torch.from_numpy(pickle.load(fo)).type(torch.cuda.FloatTensor))
+        tmpeta = torch.nn.Parameter(torch.from_numpy(pickle.load(fo)).type(torch.cuda.FloatTensor))
+
+        tmplss = pickle.load(fo)
+        paramdictLoadedFromFile = pickle.load(fo)
+    new_params.update(paramdictLoadedFromFile)
     # Create an object for the omniglot file
     emulate = omniglot_hd_emulation(params)
 
@@ -229,11 +244,17 @@ def train(parameters):
     print(temp_arr.shape)
     acc_count = 0
     new_acc_count = 0
+    #suffix="_Wactiv_tanh_alpha_free_flare_0_gamma_0.666_imgsize_31_ipd_0_lr_3e-05_nbclasses_5_nbf_64_nbiter_5000000_nbshots_1_prestime_1_prestimetest_1_rule_oja_steplr_1000000.0_rngseed_"+str(1)+"_5000000"
+    net = Network(new_params)
+    net.load_state_dict(torch.load('../torchmodels/torchmodel'+suffix + '.txt'))
+    #net = emulate.init_net_torch()
     #Iterate the images over the network now
     for num_test_sample in range(params['no_test_iters']):
         mod = np.zeros_like(dict1['w'])
-        mod_torch = emulate.init_net_torch()
+        #mod_torch = emulate.init_mod_param(net)
+        mod_torch = net.initialZeroHebb()
         inputs, labels, testlabel = emulate.read_inputs(input_dataset)
+        #print (inputs.shape, "This is the shape of the inputs\n", inputs.max(axis=0), inputs.max(axis=1), inputs.min(axis=0), inputs.min(axis=1))
         final_out = np.zeros_like(testlabel)
         for i in range(inputs.shape[0]):
             output_vector = emulate.Network(inputs[i], 3, 2, dict1)
@@ -241,10 +262,11 @@ def train(parameters):
             output_vector_fp = np.reshape(output_vector_fp,(params['no_filters']))
             output_vector = np.reshape(output_vector,(params['no_filters']))
             final_out,mod = emulate.plastic_layer(output_vector_fp, labels[i], dict1,mod )
-            torch_output_vector, torch_final_out, mod_torch = emulate.torch_plastic_output(inputs[i], labels[i], mod_torch)
+            input_activations, label = emulate.torch_plastic_output(inputs[i], labels[i], mod_torch)
+            torch_output_vector, torch_final_out, mod_torch = net(Variable(input_activations, requires_grad=False), Variable(label, requires_grad=False), mod_torch)
             print (output_vector.shape, output_vector_fp.shape,final_out,labels[i], testlabel)
             print ("torch outputs")
-            print (torch_output_vector.shape, torch_final_out)
+            print (torch_output_vector.shape, torch_final_out,"\n#####################\n")
             print (inputs.shape, labels.shape, " ****************************\n", i)
             final_weights = dict1['w']
             final_alpha = dict1['alpha']
