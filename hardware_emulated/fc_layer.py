@@ -17,7 +17,7 @@ class FC_layer:
         self.eta = eta
 
     def forward(self, weights, alpha, mod):
-        mod = np.zeros_like(weights)
+        #mod = np.zeros_like(weights)
         plastic_wt = np.zeros_like(weights)
         plastic_wt_fixed = np.zeros_like(weights)
         activation = np.zeros((weights.shape[1]))
@@ -36,10 +36,12 @@ class FC_layer:
                 activation_fixed[i] += Fixed_Mul(self.input_activs[j],plastic_wt_fixed[j][i],6,10)
 
             activation_fixed[i] = Fixed_to_Float2(activation_fixed[i],10)
+        print (activation, "These are the intermediate activations")
+        for i in range(len(self.inputlabel)):
             if(self.inputlabel[i]==1):
                 activation[i] = activation[i]+1000
                 activation_fixed[i] = activation_fixed[i] + 1000
-        print (activation, "These are the intermediate activations")
+
         return activation
 
 
@@ -83,5 +85,5 @@ class FC_layer:
             for j in range(mod.shape[1]):
                 temp = inter_mod[i]*activation_out[j]   # saving the intermediate value
                 mod[i][j] = mod[i][j] + self.eta*temp
-        print ("\n\n",mod,"\nThis is the emulated trace value after learning \n\n")
+        #print ("\n\n",mod,"\nThis is the emulated trace value after learning \n\n")
         return mod
