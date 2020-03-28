@@ -261,28 +261,32 @@ def train(parameters):
             output_vector_fp = np.reshape(output_vector_fp,(params['no_filters']))
 
             output_vector = np.reshape(output_vector,(params['no_filters']))
-            # final_out,mod = emulate.plastic_layer(output_vector_fp, labels[i], dict1,mod )
+            final_out,mod = emulate.plastic_layer(output_vector_fp, labels[i], dict1, mod)
             print (dict1['eta'], "The eta value used in the emulated network \n")
 
             input_activations, label = emulate.torch_plastic_output(inputs[i], labels[i], mod_torch)
             torch_output_vector, torch_final_out, mod_torch = net(Variable(input_activations, requires_grad=False), Variable(label, requires_grad=False), mod_torch)
 
-            #print (output_vector.shape, output_vector_fp.shape,final_out,labels[i], testlabel)
+            print (output_vector.shape, output_vector_fp.shape,final_out,labels[i], testlabel)
             print ("torch outputs")
             print (torch_output_vector.shape, torch_final_out,"\n#####################\n")
 
             new_output_vector = torch_output_vector.cpu().detach().numpy().reshape((64))
-            final_out,mod = emulate.plastic_layer(output_vector_fp, labels[i], dict1, mod)
+            #final_out,mod = emulate.plastic_layer(output_vector_fp, labels[i], dict1, mod)
             difference = new_output_vector - output_vector_fp
-            print ("the difference in activations \n \n", difference)
+            # if (i==5):
+            #     print ("the difference in activations \n \n", difference)
 
             new_mod_torch = mod_torch.cpu().detach().numpy()
             trace_diff = new_mod_torch - mod
-            #print ("The difference in traces \n",trace_diff)
+            # if (i==4):
+            #     print ("The difference in traces \n",trace_diff)
 
-            print (inputs.shape, labels.shape, " ****************************\n", i)
+            #print (inputs.shape, labels.shape, " ****************************\n", i)
             final_weights = dict1['w']
             final_alpha = dict1['alpha']
+            if (i==5):
+                print ("\n$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n")
         if (np.argmax(final_out) == np.argmax(testlabel)):
             acc_count += 1
             print ("=====>",acc_count)
