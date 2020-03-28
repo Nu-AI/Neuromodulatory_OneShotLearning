@@ -60,14 +60,15 @@ class Network(nn.Module):
         activ = activin.mm( self.w + torch.mul(self.alpha, hebb)) + 1000.0 * inputlabel # The expectation is that a nonzero inputlabel will overwhelm the inputs and clamp the outputs
         # elif self.params['alpha'] == 'yoked':
             # activ = activin.mm( self.w + self.alpha * hebb) + 1000.0 * inputlabel # The expectation is that a nonzero inputlabel will clip this and affect the other inputs
+        print ("\n",activ, "These are the intermediate activations before softmax function in the torchmodel \n %%%%%%%%%%%%%%%%%%")
         activout = F.softmax( activ )
-
+        print ("\n",activout, "These are the intermediate activations after softmax function in the torchmodel \n %%%%%%%%%%%%%%%%%%")
         # if self.rule == 'hebb':
         #     hebb = (1 - self.eta) * hebb + self.eta * torch.bmm(activin.unsqueeze(2), activout.unsqueeze(1))[0] # bmm used to implement outer product; remember activs have a leading singleton dimension
         # elif self.rule == 'oja':
-        print ("\n", hebb, " \n The trace value before \n")
+        #print ("\n", hebb, " \n The trace value before \n")
         hebb = hebb + self.eta * torch.mul((activin[0].unsqueeze(1) - torch.mul(hebb , activout[0].unsqueeze(0))) , activout[0].unsqueeze(0))  # Oja's rule. Remember that yin, yout are row vectors (dim (1,N)). Also, broadcasting!
-        print ("\n", hebb, " \n The trace value after \n")
+        #print ("\n", hebb, " \n The trace value after \n")
         # else:
         #     raise ValueError("Must select one learning rule ('hebb' or 'oja')")
         print (self.eta, "The eta value being read from the results file")
