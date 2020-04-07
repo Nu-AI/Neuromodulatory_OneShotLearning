@@ -42,7 +42,7 @@ class FC_layer:
                 activation[i] = activation[i]+1000
                 activation_fixed[i] = activation_fixed[i] + 1000
 
-        return activation
+        return activation_fixed
 
 
     def softmax(self, activation):
@@ -52,7 +52,7 @@ class FC_layer:
         return convert_arr
 
     def update_trace(self, activation_out, mod):
-        mod_fixed = np.zeros_like(mod)
+        #mod_fixed = np.zeros_like(mod)
         # for i in range(mod.shape[0]):
         #     inter2 = Float_to_Fixed(self.input_activs[i],6,10)
         #     for j in range(mod.shape[1]):
@@ -70,20 +70,35 @@ class FC_layer:
         #             #mod[i][j] = mod[i][j]
         #              mod_fixed[i][j] = mod[i][j]
         inter_mod = np.zeros((mod.shape[0],1))
+        inter_mod_fixed = np.zeros((mod.shape[0],1))
         inter_temp = 0
-
+        inter_temp_fixed=0
         #These loops are calculating the inner multiplicative factors
         # These take the hadamard prodcut of the modulatry trace with the output input_activations
         # Then the resultant matrix is subtracted from the input activations to the layer (feature vector)
         for i in range(mod.shape[0]):
             for j in range(mod.shape[1]):
                 inter_temp += mod[i][j]*activation_out[j]   # accumulating partial sum
+
+                inter_temp_fixed = Float_to_Fixed(inter_temp_fixed,6,10) + Fixed_Mul(mod[i][j],activation_out[j],6,10)
+
             inter_mod[i] = self.input_activs[i] - inter_temp
+
+            inter_mod_fixed[i] = Float_to_Fixed(self.input_activs[i],6,10) - inter_temp_fixed
+
             inter_temp = 0
+            inter_temp_fixed = 0
 
         for i in range(mod.shape[0]):
             for j in range(mod.shape[1]):
                 temp = inter_mod[i]*activation_out[j]   # saving the intermediate value
+                temp_fixed = Fixed_Mul(inter_mod[i],activation_out[j], 6, 10)
+
+                temp_fixed = Fixed_to_Float2(temp_fixed,10)
                 mod[i][j] = mod[i][j] + self.eta*temp
+                mod_fixed = Float_to_Fixed(mod[i][j],6,10) + Fixed_Mul(self.eta,temp_fixed, 6,10)
+                # Incorporate fixed point logic in the code
+                #mod[i][j] = Fixed_to_Float2(mod_fixed, 10)
         #print ("\n\n",mod,"\nThis is the emulated trace value after learning \n\n")
+
         return mod
