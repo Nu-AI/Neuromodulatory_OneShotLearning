@@ -191,7 +191,7 @@ class omniglot_hd_emulation:
         for i in range(self.params['steps']):
             input_list = list(np.reshape(inputs[i,:,:],(self.params['imagesize']*self.params['imagesize'])))
             input_fixed = list(map(lambda x: Float_to_Fixed(x,2,12), input_list))
-            input_fixed = np.reshape(np.array(input_fixed),(self.params['imagesize'], self.params['imagesize']) )
+            input_fixed = np.reshape(np.array(inputd_fixed),(self.params['imagesize'], self.params['imagesize']) )
             input_fixed_arr[i] = input_fixed
         return input_fixed_arr
 
@@ -261,7 +261,7 @@ def train(parameters):
             output_vector_fp = np.reshape(output_vector_fp,(params['no_filters']))
 
             output_vector = np.reshape(output_vector,(params['no_filters']))
-            final_out,mod = emulate.plastic_layer(output_vector_fp, labels[i], dict1, mod)
+            final_out,mod = emulate.plastic_layer(output_vector, labels[i], dict1, mod)
             print (dict1['eta'], "The eta value used in the emulated network \n")
 
             input_activations, label = emulate.torch_plastic_output(inputs[i], labels[i], mod_torch)
@@ -279,8 +279,8 @@ def train(parameters):
 
             new_mod_torch = mod_torch.cpu().detach().numpy()
             trace_diff = new_mod_torch - mod
-            # if (i==4):
-            #     print ("The difference in traces \n",trace_diff)
+            if (i==4):
+                print ("The difference in traces \n",trace_diff)
 
             #print (inputs.shape, labels.shape, " ****************************\n", i)
             final_weights = dict1['w']
