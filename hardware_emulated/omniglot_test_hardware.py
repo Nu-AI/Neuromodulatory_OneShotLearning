@@ -69,38 +69,37 @@ np.set_printoptions(threshold=np.inf)
 #################################################################
 # Sample stuff for debugging and testing the functionality      #
 #################################################################
-image = skimage.data.chelsea()
-img  = skimage.color.rgb2gray(image)
-l1_filter = np.zeros((2,3,3))
-l1_filter_new = np.zeros((2,3,3))
-img = skimage.transform.resize(img, (31,31))
-img = img/np.linalg.norm(img)
-norm_image = map(lambda row:row/np.linalg.norm(row), img)
-
-
-l1_filter[0, :, :] = np.array([[[-1, 0, 1],
-                                  [1, 0, 1],
-                                  [-1, 0, 1]]])
-
-l1_filter[1, :, :] = np.array([[[1,   1,  -1],
-                                [0,   0,  0],
-                               [-1, 1, 1]]])
-
-l1_filter_new[0, :, :] = np.array([[[1, -1, 1],
-                                  [0, 0, 1],
-                                  [1, 0, -1]]])
-
-l1_filter_new[1, :, :] = np.array([[[1,   0,  -1],
-                                [0,   1,  0],
-                               [-1, 0, 1]]])
-
-l2_filter =  np.zeros((2,2,3,3))
-l2_filter[0,:,:,:] = l1_filter
-l2_filter[1,:,:,:] = l1_filter_new
+# image = skimage.data.chelsea()
+# img  = skimage.color.rgb2gray(image)
+# l1_filter = np.zeros((2,3,3))
+# l1_filter_new = np.zeros((2,3,3))
+# img = skimage.transform.resize(img, (31,31))
+# img = img/np.linalg.norm(img)
+# norm_image = map(lambda row:row/np.linalg.norm(row), img)
+#
+#
+# l1_filter[0, :, :] = np.array([[[-1, 0, 1],
+#                                   [1, 0, 1],
+#                                   [-1, 0, 1]]])
+#
+# l1_filter[1, :, :] = np.array([[[1,   1,  -1],
+#                                 [0,   0,  0],
+#                                [-1, 1, 1]]])
+#
+# l1_filter_new[0, :, :] = np.array([[[1, -1, 1],
+#                                   [0, 0, 1],
+#                                   [1, 0, -1]]])
+#
+# l1_filter_new[1, :, :] = np.array([[[1,   0,  -1],
+#                                 [0,   1,  0],
+#                                [-1, 0, 1]]])
+#
+# l2_filter =  np.zeros((2,2,3,3))
+# l2_filter[0,:,:,:] = l1_filter
+# l2_filter[1,:,:,:] = l1_filter_new
 
 
 defaultParams = {
-
     'no_classes': 5,                                   # Number of classes in the N-way K-shot learning case
     'no_shots': 1,                                     # Number of 'shots' in the few-shots learning
     'rand_seed':0,                                     # Select the random seed file for taking the weights
@@ -110,25 +109,27 @@ defaultParams = {
     'present_test': 1,                                 # Number of times we present the testing class
     'no_test_iters': 100,
     'activation': 'tanh',
+    'precision': 16,
+    'fractional':10,
     'address' : '../omniglot_dataset/omniglot/python/', # enter the path of the dataset here
     #'print_every': 10,  # After how many epochs
 }
 TEST_CLASSES = 100
 
 
-
 class omniglot_hd_emulation:
+
 
     def __init__(self, params):
         self.params = params
         self.params['steps'] =  params['no_shots']*(params['no_classes']) + params['present_test']
+        self.params['decimal'] = params['precision'] - params['fractional']
         print ("Started the emulation")
 
     def read_input_dataset(self):
         input_val = input_generator()
         inputdata = input_val.dataset_reader(self.params['address'])
         print (np.array(inputdata).shape,"the shape of the input data")
-        #inputs, labels, testlabel  = input_val.gen_inputs_labels_testlabel(self.params, inputdata, test=False)
         return inputdata
 
     def read_inputs(self, dataset):
@@ -151,27 +152,23 @@ class omniglot_hd_emulation:
         return net.initialZeroHebb()
 
     def Network(self, img, kernel_size, stride,dict):
-        conv1 = conv_3_3(img, kernel_size,stride,self.params['no_filters'],dict['cv1.bias'],self.params['activation'])
-        #print (conv1.forward(dict['cv1.weight']))
-        conv2 = conv_3_3(conv1.forward(dict['cv1.weight']), kernel_size,stride,self.params['no_filters'], dict['cv2.bias'],self.params['activation'])
-        conv3 = conv_3_3(conv2.forward(dict['cv2.weight']), kernel_size,stride,self.params['no_filters'], dict['cv3.bias'],self.params['activation'])
-        conv4 = conv_3_3(conv3.forward(dict['cv3.weight']), kernel_size,stride,self.params['no_filters'], dict['cv4.bias'],self.params['activation'])
-
+        conv1 = conv_3_3(img, kernel_size,stride,self.params['no_filters'],dict['cv1.bias'],self.params['activation'],self.params['fractional'], self.params['decimal'])
+        conv2 = conv_3_3(conv1.forward(dict['cv1.weight']), kernel_size,stride,self.params['no_filters'], dict['cv2.bias'],self.params['activation'],self.params['fractional'], self.params['decimal'])
+        conv3 = conv_3_3(conv2.forward(dict['cv2.weight']), kernel_size,stride,self.params['no_filters'], dict['cv3.bias'],self.params['activation'],self.params['fractional'],self.params['decimal'])
+        conv4 = conv_3_3(conv3.forward(dict['cv3.weight']), kernel_size,stride,self.params['no_filters'], dict['cv4.bias'],self.params['activation'],self.params['fractional'],self.params['decimal'])
         #print (conv4.forward(dict['cv4.weight']), "This is the final conv layer output"
         return conv4.forward(dict['cv4.weight'])
 
     def Network_fp(self, img, kernel_size, stride, dict):
         conv1 = conv_3_3_fp(img, kernel_size,stride,self.params['no_filters'],dict['cv1.bias'], self.params['activation'])
-        #print (conv1.forward(dict['cv1.weight']))
         conv2 = conv_3_3_fp(conv1.forward(dict['cv1.weight']), kernel_size,stride,self.params['no_filters'], dict['cv2.bias'],self.params['activation'])
         conv3 = conv_3_3_fp(conv2.forward(dict['cv2.weight']), kernel_size,stride,self.params['no_filters'], dict['cv3.bias'],self.params['activation'])
         conv4 = conv_3_3_fp(conv3.forward(dict['cv3.weight']), kernel_size,stride,self.params['no_filters'], dict['cv4.bias'], self.params['activation'])
-
         #print (conv4.forward(dict['cv4.weight']), "This is the final conv layer output")
         return conv4.forward(dict['cv4.weight'])
 
     def plastic_layer(self,input_activations,label,dict,mod):
-        fully_connected = FC_layer(input_activations, label, dict['eta'])
+        fully_connected = FC_layer(input_activations, label, dict['eta'], self.params['fractional'], self.params['decimal'])
         #mod = np.zeros_like(dict['w'])
         output =fully_connected.softmax(fully_connected.forward(dict['w'],dict['alpha'],mod))
         mod = fully_connected.update_trace(output,mod)
@@ -191,25 +188,10 @@ class omniglot_hd_emulation:
         for i in range(self.params['steps']):
             input_list = list(np.reshape(inputs[i,:,:],(self.params['imagesize']*self.params['imagesize'])))
             input_fixed = list(map(lambda x: Float_to_Fixed(x,2,12), input_list))
-            input_fixed = np.reshape(np.array(inputd_fixed),(self.params['imagesize'], self.params['imagesize']) )
+            input_fixed = np.reshape(np.array(input_fixed),(self.params['imagesize'], self.params['imagesize']) )
             input_fixed_arr[i] = input_fixed
         return input_fixed_arr
 
-# params = {}
-# params.update(defaultParams)
-# print (params)
-# emulate = omniglot_hd_emulation(params)
-#
-# inputs, labels, testlabel = emulate.read_inputs(emulate.read_input_dataset())
-# input_fixed_arr = emulate.inputs_to_fixed(inputs)
-#
-# print (input_fixed_arr.shape)
-#
-# print (inputs.shape, labels, testlabel)
-# dict1, tmpw, tmpalpha, tmpeta = emulate.read_weights()
-# print_keys = "".join(str(key) + " " for key in dict1)
-# print (print_keys)
-# emulate.Network(img)
 
 def train(parameters):
     # Setup the parameter dictionary
@@ -282,7 +264,6 @@ def train(parameters):
             if (i==4):
                 print ("The difference in traces \n",trace_diff)
 
-            #print (inputs.shape, labels.shape, " ****************************\n", i)
             final_weights = dict1['w']
             final_alpha = dict1['alpha']
             if (i==5):
@@ -300,10 +281,7 @@ def train(parameters):
     print ("=====>",acc_count, "=====>", new_acc_count)
     # print ("***************************************\n", output_vector)
     # print("\n ***************************************", output_vector_fp)
-
     #np.savetxt("vector_fp32.txt", np.reshape(output_vector,())
-    # print (input_fixed_arr.shape)
-    # print (inputs.shape, labels, testlabel)
 
     diff_ratio = np.divide(np.absolute(output_vector_fp - output_vector), np.absolute(output_vector_fp))
     #print (diff_ratio)
@@ -315,7 +293,6 @@ def train(parameters):
     output_vector = np.reshape(output_vector,(64))
     output_vector = output_vector/(np.amax(np.absolute(output_vector)))
     n, bins, patches = ax[0].hist(output_vector, num_bins, facecolor='blue', alpha=0.5)
-    # plt.show()
 
     output_vector_fp = np.reshape(output_vector_fp,(64))
     output_vector_fp = output_vector_fp/(np.amax(np.absolute(output_vector_fp)))
@@ -323,5 +300,6 @@ def train(parameters):
     plt.show()
     print_keys = "".join(str(key) + " " for key in dict1)
     print (print_keys)
+
 
 train(defaultParams)
