@@ -125,8 +125,6 @@ class input_generator:
 
             assert(selection == params['steps'])
 
-            #targets = torch.from_numpy(testlabel).type(torch.cuda.FloatTensor)
-
             return inputs, labels, testlabel
 
 input = input_generator()

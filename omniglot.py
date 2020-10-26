@@ -29,8 +29,7 @@ import glob
 
 np.set_printoptions(precision=4)
 defaultParams = {
-    'activ': 'tanh',    # 'tanh' or 'selu'
-    #'plastsize': 200,
+    'activ': 'tanh',    # 'tanh' or 'relu'
     'rule': 'hebb',     # 'hebb' or 'oja'
     'alpha': 'free',   # 'free' of 'yoked' (if the latter, alpha is a single scalar learned parameter, shared across all connection)
     'steplr': 1e6,  # How often should we change the learning rate?
@@ -115,7 +114,6 @@ def generateInputsLabelsAndTarget(params, imagedata, test=False):
 
     #pdb.set_trace()
 
-
     assert(location == params['nbsteps'])
 
     inputT = torch.from_numpy(inputT).type(ttype)  # Convert from numpy to pytorch Tensor
@@ -180,6 +178,7 @@ class Network(nn.Module):
             activ = activin.mm( self.w + torch.mul(self.alpha, hebb)) + 1000.0 * inputlabel # The expectation is that a nonzero inputlabel will overwhelm the inputs and clamp the outputs
         elif self.params['alpha'] == 'yoked':
             activ = activin.mm( self.w + self.alpha * hebb) + 1000.0 * inputlabel # The expectation is that a nonzero inputlabel will clip this and affect the other inputs
+        
         activout = F.softmax( activ )
 
         if self.rule == 'hebb':
@@ -194,8 +193,6 @@ class Network(nn.Module):
     def initialZeroHebb(self):
         #return Variable(torch.zeros(self.params['plastsize'], self.params['nbclasses']).type(ttype))
         return Variable(torch.zeros(self.params['nbf'], self.params['nbclasses']).type(ttype))
-
-
 
 
 def train(paramdict=None):
@@ -329,7 +326,6 @@ def train(paramdict=None):
            # print("Alternative computation (should be equal):", np.mean(all_losses_objective[-params['save_every']:]))
             losslast100 = torch.mean(torch.stack(all_losses_objective[-100:]))
             print("Average loss over the last 100 episodes:", losslast100)
-
 
             #else: # to "print("Saved!")"
             print("Saving local files...")

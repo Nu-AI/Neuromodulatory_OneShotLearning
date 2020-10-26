@@ -287,7 +287,7 @@ def train(parameters):
     #print (diff_ratio)
     print ("The mean error is", np.mean(np.absolute(diff_ratio)))
 
-    fig, ax = plt.subplots(1,2,tight_layout=True)
+    fig, ax = plt.subplots(1,2,tight_layout=True, sharex=True, sharey=True)
 
     num_bins = 64
     output_vector = np.reshape(output_vector,(64))
@@ -297,12 +297,16 @@ def train(parameters):
     output_vector_fp = np.reshape(output_vector_fp,(64))
     output_vector_fp = output_vector_fp/(np.amax(np.absolute(output_vector_fp)))
     n,bis,patches = ax[1].hist(output_vector_fp,num_bins, facecolor='green', alpha =0.5)
-    ax[0].set_ylabel("Count", fontsize = 15)
-    ax[1].set_xlabel("Normalized Weights (Full Precision)")
-    ax[0].set_xlabel("Normalized Weights (Quantized)" )
+    ax.set_ylabel("Count")
+    ax[0].set_xlabel("Normalized weights (quantized)")
+    ax[1].set_xlabel("Normalized weights (full precision)")
+    # for axes in ax:
+    #     axes.set_xlabel("Weight values")
+    #     axes.set_ylabel("Count")
+    #plt.xlabel("Weight values")
+    #plt.ylabel("Count")
     plt.show()
     print_keys = "".join(str(key) + " " for key in dict1)
-
     print (print_keys)
 
 

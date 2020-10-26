@@ -89,7 +89,7 @@ l2_filter[1,:,:,:] = l1_filter_new
 
 class conv_3_3:
 
-    def __init__(self, input_map, kernel_size, stride, nbfilters, bias, activation):
+    def __init__(self, input_map, kernel_size, stride, nbfilters, bias, activation, fractional, decimal):
         self.nbfilters = nbfilters
         self.input_map = input_map
         self.kernel_size = kernel_size
@@ -97,6 +97,8 @@ class conv_3_3:
         self.filter_array = np.random.randn(nbfilters, 3, 3) / 9
         self.bias = bias
         self.activation = activation
+        self.fractional = fractional
+        self.decimal = decimal
     ###############################################################
     # Convolution operation handler. Regulates the number of      #
     # convolutions taking place and is responsible for generating #
@@ -116,9 +118,7 @@ class conv_3_3:
         #Starting the convolutions
         count = 0
         for ftr in range(self.nbfilters):
-            #print ("Entered thhe looop *******************", self.nbfilters, ftr)
             temp_filter = filter[ftr,:]
-            #print (temp_filter.shape[0], self.input_map.shape, "the filters shape")
             if (temp_filter.shape[0] == 1):
                 temp_filter = np.reshape(temp_filter,(3,3))
             if (len(self.input_map.shape)>2):
@@ -132,7 +132,7 @@ class conv_3_3:
             else:
                 conv_map = self.conv_perform(self.input_map,temp_filter)
 
-            temp_feature_map[:,:,ftr] = conv_map + Fixed_to_Float(Float_to_Fixed(self.bias[ftr],6,10),10)
+            temp_feature_map[:,:,ftr] = conv_map + Fixed_to_Float(Float_to_Fixed(self.bias[ftr],self.decimal,self.fractional),self.fractional)
 
             #new_feature_map[:,:,ftr] = func(temp_feature_map[:,:,ftr])
         #new_feature_map = np.array(list(map(lambda x: activation.apply_act(x),temp_feature_map)))
@@ -175,9 +175,9 @@ class conv_3_3:
                     for j in range (self.kernel_size):
                         point_wise_mult += input_map[k+i][t+j] * filter[i][j]
                         #print(input_map[k+i][t+j], filter[i][j], "the pointwise multipliers")
-                        point_wise_mult_fixed += Fixed_Mul(input_map[k+i][t+j],filter[i][j],6,10)
+                        point_wise_mult_fixed += Fixed_Mul(input_map[k+i][t+j],filter[i][j],self.decimal,self.fractional)
                         a[i*j + j] = point_wise_mult_fixed # Testing for fixed accum
-                        val_in_float = Fixed_to_Float2(point_wise_mult_fixed, 10)
+                        val_in_float = Fixed_to_Float2(point_wise_mult_fixed, self.fractional)
                 #Need to fix the fixed accumulator
                 #float_acc = Fixed_ACC(a,self.kernel_size*self.kernel_size)
                 feature_map[temp_counter_1][temp_counter_2] = point_wise_mult

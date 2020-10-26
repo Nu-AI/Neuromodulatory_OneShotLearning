@@ -1,7 +1,4 @@
 
-
-
-
 import pdb
 import torch
 import torch.nn as nn
@@ -20,19 +17,10 @@ import skimage
 from skimage import transform
 import os
 import platform
-
-
-# import qtorch
-# from qtorch.quant import fixed_point_quantize
-
-#from qtorch.optim import OptimL
-
-
 import matplotlib.pyplot as plt
 import glob
 
 import omniglot
-
 from omniglot import Network
 
 
@@ -57,12 +45,8 @@ defaultParams = {
 }
 NBTESTCLASSES = 100
 
-
-
-
 #ttype = torch.FloatTensor;
 ttype = torch.cuda.FloatTensor;
-
 
 # Generate the full list of inputs, labels, and the target label for an episode
 def generateInputsLabelsAndTarget(params, imagedata, test=False):
@@ -86,7 +70,6 @@ def generateInputsLabelsAndTarget(params, imagedata, test=False):
     testcat = random.choice(cats) # select the class on which we'll test in this episode
     unpermcats = cats.copy()
 
-
     location = 0
     for nc in range(params['nbshots']):
         np.random.shuffle(cats)   # Presentations occur in random order
@@ -97,8 +80,6 @@ def generateInputsLabelsAndTarget(params, imagedata, test=False):
                 p = np.rot90(p)
             p = skimage.transform.resize(p, (31, 31))
             for nn in range(params['prestime']):
-
-
                 inputT[location][0][0][:][:] = p[:][:]
                 labelT[location][0][np.where(unpermcats == catnum)] = 1
                 #if nn == 0:
@@ -119,9 +100,8 @@ def generateInputsLabelsAndTarget(params, imagedata, test=False):
     testlabel = np.zeros(params['nbclasses'])
     testlabel[np.where(unpermcats == testcat)] = 1
 
-
     assert(location == params['nbsteps'])
-
+    print (labelT, testlabel.shape)
     inputT = torch.from_numpy(inputT).type(ttype)  # Convert from numpy to Tensor
     labelT = torch.from_numpy(labelT).type(ttype)
     targetL = torch.from_numpy(testlabel).type(ttype)
@@ -145,12 +125,6 @@ def train(paramdict=None):
     print("Loading Omniglot data...")
     imagedata = []
     imagefilenames=[]
-    #for basedir in ('./omniglot-master/python/images_background/',
-    #                './omniglot-master/python/images_evaluation/'):
-    #for basedir in ('C:\\Users\Anurag\PycharmProjects\Thesis_codes\omniglot-master\python\images_background',
-    #                'C:\\Users\Anurag\PycharmProjects\Thesis_codes\omniglot-master\python\images_evaluation'):
-    # for basedir in ('C:\\Users\Anurag\PycharmProjects\Thesis_codes\omniglot-master\python\images_background/',
-    #                 'C:\\Users\Anurag\PycharmProjects\Thesis_codes\omniglot-master\python\images_evaluation/'):
     for basedir in ('./omniglot_dataset/omniglot/python/images_background/',
                     './omniglot_dataset/omniglot/python/images_evaluation/'):
         alphabetdirs = glob.glob(basedir+'*')
@@ -181,8 +155,7 @@ def train(paramdict=None):
     totaliter = 0
     totalmistakes = 0
 
-    for myseed in range(8,9,1):
-
+    for myseed in range(5,6,1):
 
         #suffix="_Wactiv_tanh_alpha_free_flare_0_gamma_0.75_imgsize_31_ipd_0_lr_3e-05_nbclasses_5_nbf_64_nbiter_5000000_nbshots_1_prestime_1_prestimetest_1_rule_oja_steplr_1000000.0_rngseed_"+str(myseed)
         suffix="_Wactiv_tanh_alpha_free_flare_0_gamma_0.666_imgsize_31_ipd_0_lr_3e-05_nbclasses_5_nbf_64_nbiter_5000000_nbshots_1_prestime_1_prestimetest_1_rule_oja_steplr_1000000.0_rngseed_"+str(myseed)+"_5000000"
@@ -198,7 +171,6 @@ def train(paramdict=None):
             #         qtmpalpha = fixed_point_quantize(tmpalpha, 16, 14)
             #         qtmpeta  = fixed_point_quantize(tmpeta, 16, 14)
             #         qparamdictLoadFromFile = fixed_point_quantize(paramdictLoadedFromFile, 16, 14)
-
 
         params.update(paramdictLoadedFromFile)
         # if (params['quantization']):
@@ -221,14 +193,9 @@ def train(paramdict=None):
         params['nbsteps'] = params['nbshots'] * ((params['prestime'] + params['interpresdelay']) * params['nbclasses']) + params['prestimetest']  # Total number of steps per episode
 
         net.load_state_dict(torch.load('./torchmodels/torchmodel'+suffix + '.txt'))
-
-
         #torch.quantization.quantize_dynamic(net.cpu(),dtype = torch.qint8 )
 
         params['nbiter'] = 100
-
-
-
         total_loss = 0.0
         #print("Initializing optimizer")
         ##optimizer = torch.optim.Adam([net.w, net.alpha, net.eta], lr=params['learningrate'])
@@ -238,7 +205,6 @@ def train(paramdict=None):
         nowtime = time.time()
         print("Starting episodes...")
         sys.stdout.flush()
-
         nbmistakes = 0
 
         for numiter in range(params['nbiter']):
@@ -246,28 +212,26 @@ def train(paramdict=None):
             hebb = net.initialZeroHebb()
             #optimizer.zero_grad()
 
-
             is_test_step = 1
 
             inputs, labels, target = generateInputsLabelsAndTarget(params, imagedata, test=is_test_step)
 
-
             for numstep in range(params['nbsteps']):
                 y, hebb = net(Variable(inputs[numstep], requires_grad=False), Variable(labels[numstep], requires_grad=False), hebb)
 
-            #loss = (y[0] - Variable(target, requires_grad=False)).pow(2).sum()
-            criterion = torch.nn.BCELoss()
-            loss = criterion(y[0], Variable(target, requires_grad=False))
+            loss = (y[0] - Variable(target, requires_grad=False)).pow(2).sum()
+            #criterion = torch.nn.BCELoss()
+            #loss = criterion(y[0], Variable(target, requires_grad=False))
 
             if params['quantization']:
                 qy = fixed_point_quantize(y, 16, 14)
                 qhebb = fixed_point_quantize(hebb, 16, 14)
-            #if is_test_step == False:
-            #    loss.backward()
-            #    optimizer.step()
+            if is_test_step == False:
+                loss.backward()
+                optimizer.step()
             print (loss.item())
             lossnum = loss.item()       # loss.data() was not working ffor this pytorch patch
-            #total_loss  += lossnum
+            total_loss  += lossnum
             if is_test_step:
                 total_loss = lossnum
 
@@ -276,6 +240,7 @@ def train(paramdict=None):
                 print(numiter, "====")
                 td = target.cpu().numpy()
                 yd = y.data.cpu().numpy()[0]
+                print (yd, "The resultant softmax output")
                 #print("y: ", yd[:10])
                 #print("target: ", td[:10])
                 if np.argmax(td) != np.argmax(yd):
