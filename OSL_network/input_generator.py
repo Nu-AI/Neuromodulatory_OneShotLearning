@@ -6,8 +6,6 @@ from numpy import random
 import random
 import skimage
 from skimage import transform
-import os
-import platform
 import matplotlib.pyplot as plt
 
 import click
@@ -33,100 +31,76 @@ class input_generator:
 		self.params = params
 
 	def dataset_reader(self, data_dir):
+		'''
+		Read the omniglot dataset and return a array of the full dataset
+		:param data_dir: The path to the omniglot dataset folder
+		:return inputs: The input image dataset for the network
+		:return labels: The corresponding labels for the input images
+		:return dataset_array: The array consisiting of the entire dataset:
+		'''
 		train_dir = data_dir.join('images_background/')
 		test_dir = data_dir.join('images_evaluation/')
+		dataset_array = []
+		imagefilenames = []
 		for curr_dir in (train_dir,test_dir):
 			classdirs = glob.glob(curr_dir + '*')
-
-class input_generator:
-
-	def __init__(self, *args):
-		print("Initialized the input_generator")
-		for arg in args:
-			print(arg)
-
-	def dataset_reader(self, data_dir):
-		train_dir = data_dir + 'images_background/'
-		test_dir = data_dir + 'images_evaluation/'
-		print(train_dir, test_dir)
-		imagedata = []
-		imagefilenames = []
-		for curr_dir in (train_dir,
-		                 test_dir):
-			classdirs = glob.glob(curr_dir + '*')
-			# print(classdirs[:4],"meoww")
 			for class_dir in classdirs:
-				imagedirs = glob.glob(class_dir + "/*")
-				# print(chardirs)
+				imagedirs = glob.glob(class_dir + '/*')
 				for image_dir in imagedirs:
-					imgdata = []
-					imgfiles = glob.glob(image_dir + '/*')
-					# print (charfiles,"These are the charfiles")
-					for file in imgfiles:
-						# print(file,"the file data")
+					imagedata= []
+					imagefiles = glob.glob(image_dir + '\*')
+					for file in imagefiles:
 						filedata = plt.imread(file)
-						# print(len(filedata))
-						imgdata.append(filedata)
-					imagedata.append(imgdata)
-					imagefilenames.append(file)
+						imagedata.append(filedata)
+					dataset_array.append(imagedata)
+		np.random.shuffle(dataset_array)
+		return dataset_array
 
-		# imagedata[CharactertNumber][FileNumber] -> numpy(105,105)
-		np.random.shuffle(imagedata)
-		new_image_data = np.array(imagedata)
-		print(len(imagedata), new_image_data.shape, 'this is the imagedata')
-		print(imagedata[1][2].shape)
-		print("Data loaded!")
-		return imagedata
-
-	def gen_inputs_labels_testlabel(self, params, imagedata, test):
-
-		train_pick = np.arange(len(imagedata) - TEST_CLASSES, len(imagedata))
-		test_pick = np.arange(len(imagedata) - TEST_CLASSES)
+	def gen_test_split(self, dataset_array, test):
+		train_pick = np.arange(len(dataset_array) - TEST_CLASSES, len(dataset_array))
+		test_pick = np.arange(len(dataset_array) - TEST_CLASSES)
 
 		if test:
 			pick_samples = np.random.permutation(train_pick)[
-			               :params['no_classes']]  # Which categories to use for this *testing* episode?
+			               :self.params['no_classes']]  # Which categories to use for this *testing* episode?
 		else:
 			pick_samples = np.random.permutation(test_pick)[
-			               :params['no_classes']]  # Which categories to use for this *training* episode?
+			               :self.params['no_classes']]  # Which categories to use for this *training* episode?
 
 		pick_samples = np.random.permutation(pick_samples)  # Again randomizing
 
-		inputs = np.zeros((params['steps'], params['imagesize'], params[
+		inputs = np.zeros((self.params['steps'], self.params['imagesize'], self.params[
 			'imagesize']))  # inputTensor, initially in numpy format... Note dimensions: number of steps x batchsize (always 1) x NbChannels (also 1) x h x w
-		labels = np.zeros((params['steps'], params['no_classes']))  # labelTensor, initially in numpy format...
-		testlabel = np.zeros(params['no_classes'])
+		labels = np.zeros((self.params['steps'], self.params['no_classes']))  # labelTensor, initially in numpy format...
+		testlabel = np.zeros(self.params['no_classes'])
 
-		rotations = np.random.randint(4, size=len(imagedata))
+		rotations = np.random.randint(4, size=len(dataset_array))
 
 		# select the class on which we'll test in this episode
 		unpermuted_samples = pick_samples.copy()
 
 		selection = 0
-		for _ in range(params['no_shots']):
+		for _ in range(self.params['no_shots']):
 
 			np.random.shuffle(pick_samples)  # Always show the classes in fully random fashion
 			for i, sample_num in enumerate(pick_samples):
 				# Randomly select a sample
-				p = random.choice(imagedata[sample_num])
+				p = random.choice(dataset_array[sample_num])
 				# Randomly rotate the seleted sample
 				for _ in range(rotations[sample_num]):
 					p = np.rot90(p)
 				p = skimage.transform.resize(p, (31, 31))
 				inputs[selection, :, :] = p[:][:]
 				labels[selection][np.where(unpermuted_samples == sample_num)] = 1
-				# if nn == 0:
-				#    print(labelT[location][0])
 				selection += 1
 
 		# Inserting the test character
 		test_sample = random.choice(unpermuted_samples)
-		p = random.choice(imagedata[test_sample])
+		p = random.choice(dataset_array[test_sample])
 		for _ in range(rotations[test_sample]):
 			p = np.rot90(p)
 		p = skimage.transform.resize(p, (31, 31))
 
-		# inputs[selection][0][0][:][:] = p[:][:]
 		inputs[selection, :, :] = p[:][:]
 		selection += 1
 
@@ -134,8 +108,7 @@ class input_generator:
 		# labels = torch.from_numpy(labels).type(torch.cuda.FloatTensor)
 		# Generating the test label
 		testlabel[np.where(unpermuted_samples == test_sample)] = 1
-
-		assert (selection == params['steps'])
+		assert (selection == self.params['steps'])
 
 		return inputs, labels, testlabel
 
