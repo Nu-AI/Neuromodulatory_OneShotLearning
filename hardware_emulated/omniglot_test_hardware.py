@@ -13,13 +13,13 @@ import os
 import platform
 import seaborn as sns
 import matplotlib.pyplot as plt
-from conv import *
-from weight_loader import *
-from input_generator import *
-from torch_net import *
+from OSL.hardware_emulated.conv import *
+from OSL.hardware_emulated.weight_loader import *
+from OSL.hardware_emulated.input_generator import *
+from OSL.hardware_emulated.torch_model import *
 
-from conv_fp32 import *
-from fc_layer import *
+from OSL.hardware_emulated.conv_fp32 import *
+from OSL.hardware_emulated.fc_layer import *
 import ctypes, ctypes.util
 from ctypes import cdll
 
@@ -101,7 +101,7 @@ np.set_printoptions(threshold=np.inf)
 
 defaultParams = {
     'no_classes': 5,                                   # Number of classes in the N-way K-shot learning case
-    'no_shots': 1,                                     # Number of 'shots' in the few-shots learning
+    'no_shots': 1,                                     # Number of 'shots' in the few-shot learning
     'rand_seed':0,                                     # Select the random seed file for taking the weights
     'no_filters' : 64,                                 # Number of filters in the convolutional layers
     'imagesize': 31,                                   # The size of the 2D images to be reshaped to
@@ -225,7 +225,6 @@ def train(parameters):
     print(temp_arr.shape)
     acc_count = 0
     new_acc_count = 0
-    #suffix="_Wactiv_tanh_alpha_free_flare_0_gamma_0.666_imgsize_31_ipd_0_lr_3e-05_nbclasses_5_nbf_64_nbiter_5000000_nbshots_1_prestime_1_prestimetest_1_rule_oja_steplr_1000000.0_rngseed_"+str(1)+"_5000000"
     net = Network(new_params)
     net.load_state_dict(torch.load('../torchmodels/torchmodel'+suffix + '.txt'))
     #net = emulate.init_net_torch()
