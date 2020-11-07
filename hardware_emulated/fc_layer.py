@@ -44,7 +44,6 @@ class FC_layer:
                 activation_fixed[i] = activation_fixed[i] + 1000
 
         return activation
-        #return activation_fixed
 
 
     def softmax(self, activation):
