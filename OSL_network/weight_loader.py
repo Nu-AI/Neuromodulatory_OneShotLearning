@@ -7,6 +7,11 @@ class WeightLoader():
 		self.params = params
 
 	def read_fc_params(self, seed):
+		'''
+		Read the weights from the pretrained model with the inputs to the network
+		:param seed: The input random seed of the model run
+		:return:
+		'''
 		if self.params['cuda']:
 			ttype = torch.cuda.FloatTensor
 		else:

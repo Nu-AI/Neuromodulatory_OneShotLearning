@@ -53,7 +53,7 @@ class input_generator:
 		np.random.shuffle(dataset_array)
 		return dataset_array
 
-	def gen_test_split(self, dataset_array, test):
+	def gen_train_test_split(self, dataset_array, test):
 		train_pick = np.arange(len(dataset_array) - TEST_CLASSES, len(dataset_array))
 		test_pick = np.arange(len(dataset_array) - TEST_CLASSES)
 
