@@ -1,15 +1,12 @@
 import numpy as np
-import pdb
-import pickle
-
 from numpy import random
-import random
+import torch
 import skimage
 from skimage import transform
-import matplotlib.pyplot as plt
 
-import click
+import matplotlib.pyplot as plt
 import glob
+import random
 
 defaultParams = {
 
@@ -30,7 +27,7 @@ class input_generator:
 	def __init__(self, params):
 		self.params = params
 
-	def dataset_reader(self, data_dir):
+	def dataset_reader(self):
 		'''
 		Read the omniglot dataset and return a array of the full dataset
 		:param data_dir: The path to the omniglot dataset folder
@@ -38,8 +35,8 @@ class input_generator:
 		:return labels: The corresponding labels for the input images
 		:return dataset_array: The array consisiting of the entire dataset:
 		'''
-		train_dir = data_dir.join('images_background/')
-		test_dir = data_dir.join('images_evaluation/')
+		train_dir = self.params['data_dir'].join('images_background/')
+		test_dir = self.params['data_dir'].join('images_evaluation/')
 		dataset_array = []
 		imagefilenames = []
 		for curr_dir in (train_dir,test_dir):
@@ -104,13 +101,21 @@ class input_generator:
 		inputs[selection, :, :] = p[:][:]
 		selection += 1
 
+		if self.params['cuda']:
+			ttype = torch.cuda.FloatTensor
+		else:
+			ttype = torch.FloatTensor
+
+		# Converting the numpy array to a torch tensor
+		inputs = torch.from_numpy(inputs).type(ttype)
+		labels = torch.from_numpy(labels).type(ttype)
 		# inputs = torch.from_numpy(inputs).type(torch.cuda.FloatTensor)  # Convert from numpy to Tensor
 		# labels = torch.from_numpy(labels).type(torch.cuda.FloatTensor)
 		# Generating the test label
 		testlabel[np.where(unpermuted_samples == test_sample)] = 1
 		assert (selection == self.params['steps'])
-
-		return inputs, labels, testlabel
+		target_label = torch.from_numpy(testlabel).type(ttype)
+		return inputs, labels, target_label
 
 
 input = input_generator()

@@ -13,8 +13,10 @@ class Network(nn.Module):
 		self.cv2 = torch.nn.Conv2d(params['no_filters'], params['no_filters'], 3, stride=2)
 		self.cv3 = torch.nn.Conv2d(params['no_filters'], params['no_filters'], 3, stride=2)
 		self.cv4 = torch.nn.Conv2d(params['no_filters'], params['no_filters'], 3, stride=2)
+
 		# The weights parameter in the final layer
 		self.w = torch.nn.Parameter((.01 * torch.randn(params['no_filters'], params['no_classes'])), requires_grad=True)
+
 		# The modulatory learning parameter that influences the effect of the trace in the network
 		self.alpha = torch.nn.Parameter((.01 * torch.rand(params['no_filters'], params['no_classes'])),
 										requires_grad=True)
