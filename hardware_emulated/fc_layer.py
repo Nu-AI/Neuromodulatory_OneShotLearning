@@ -19,7 +19,6 @@ class FC_layer:
         self.decimal = decimal
 
     def forward(self, weights, alpha, mod):
-        #mod = np.zeros_like(weights)
         plastic_wt = np.zeros_like(weights)
         plastic_wt_fixed = np.zeros_like(weights)
         activation = np.zeros((weights.shape[1]))
@@ -78,6 +77,7 @@ class FC_layer:
         inter_temp_fixed=0
         #These loops are calculating the inner multiplicative factors
         # These take the hadamard product of the modulatry trace with the output input_activations
+
         # Then the resultant matrix is subtracted from the input activations to the layer (feature vector)
         for i in range(mod.shape[0]):
             for j in range(mod.shape[1]):
@@ -99,9 +99,8 @@ class FC_layer:
 
                 temp_fixed = Fixed_to_Float2(temp_fixed,self.fractional)
                 mod[i][j] = mod[i][j] + self.eta*temp
-                #mod_fixed = Float_to_Fixed(mod[i][j],self.decimal,self.fractional) + Fixed_Mul(self.eta,temp_fixed, self.decimal,self.fractional)
+                mod_fixed = Float_to_Fixed(mod[i][j],self.decimal,self.fractional) + Fixed_Mul(self.eta,temp_fixed, self.decimal,self.fractional)
                 # Incorporate fixed point logic in the code
-                #mod[i][j] = Fixed_to_Float2(mod_fixed, self.fractional)
-        #print ("\n\n",mod,"\nThis is the emulated trace value after learning \n\n")
+                mod[i][j] = Fixed_to_Float2(mod_fixed, self.fractional)
 
         return mod
