@@ -33,7 +33,6 @@ for num_iter in range(params['num_iters']):
 	accum_loss += curr_loss
 	if not params['test']:
 		loss.backward()
-
 		scheduler.step()
 		optimizer.step()
 	else:
