@@ -8,7 +8,7 @@ from skimage.transform import rescale, resize
 import ctypes, ctypes.util
 from ctypes import cdll
 
-from activation_approx import *
+from hardware_emulated.activation_approx import *
 ##################################################################
 # The next section involves setting up the C++ wrappers for the  #
 # given convolutional operations in fixed point.                 #
@@ -104,7 +104,6 @@ class conv_3_3:
     # convolutions taking place and is responsible for generating #
     # the output feature maps                                     #
     ###############################################################
-
 
 
 
