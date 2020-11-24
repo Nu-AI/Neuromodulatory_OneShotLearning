@@ -78,12 +78,11 @@ class input_generator:
 
 		selection = 0
 		for _ in range(self.params['no_shots']):
-
 			np.random.shuffle(pick_samples)  # Always show the classes in fully random fashion
 			for i, sample_num in enumerate(pick_samples):
 				# Randomly select a sample
 				p = random.choice(dataset_array[sample_num])
-				# Randomly rotate the seleted sample
+				# Randomly rotate the selected sample
 				for _ in range(rotations[sample_num]):
 					p = np.rot90(p)
 				p = skimage.transform.resize(p, (31, 31))

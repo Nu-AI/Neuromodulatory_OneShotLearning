@@ -22,6 +22,7 @@ class Network(nn.Module):
 		# The selective learning rates for the network
 		self.eta = torch.nn.Parameter((.01 * torch.ones(1)).cuda(), requires_grad=True)
 
+
 		self.params = params
 
 	def forward(self, input, inputlabel, trace):
