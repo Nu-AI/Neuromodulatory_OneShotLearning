@@ -56,12 +56,12 @@ class Network(nn.Module):
 		activout = feature_activ.mm(self.w + torch.mul(self.alpha, trace)) + 1000.0 * inputlabel
 
 		# Updating the trace during the forward pass
-		# The Oja base update of the network
+		# The modulatory base update of the network
 		trace = trace + self.eta * torch.mul(
 			(feature_activ[0].unsqueeze(1) - torch.mul(trace, activout[0].unsqueeze(0))),
 			activout[0].unsqueeze(
 				0))
-		#TODO - Will have to add other trace update rules and evaluate their performance
+		
 		return feature_activ, activout, trace
 
 	def initalize_trace(self):
