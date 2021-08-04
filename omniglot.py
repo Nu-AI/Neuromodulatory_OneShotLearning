@@ -31,7 +31,7 @@ np.set_printoptions(precision=4)
 defaultParams = {
     'activ': 'tanh',    # 'tanh' or 'selu'
     #'plastsize': 200,
-    'rule': 'hebb',     # 'hebb' or 'oja'
+    'rule': 'hebb',     # 'hebb' or mod' or 'oja'
     'alpha': 'free',   # 'free' of 'yoked' (if the latter, alpha is a single scalar learned parameter, shared across all connection)
     'steplr': 1e6,  # How often should we change the learning rate?
     'nbclasses': 5,
