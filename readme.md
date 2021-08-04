@@ -17,6 +17,7 @@ python3 hardware_emulated/omniglot_test_hardware.py
 ```
 
 The dependencies can be installed by 
+
 `pip install -r requirements.txt`
 
 ### Acknowledgements
