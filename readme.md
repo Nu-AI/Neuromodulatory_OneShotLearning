@@ -1,11 +1,15 @@
 ---
-This repo contains everything related to my modulatory trace learning rule introduced 
-in the thesis titled - ***[Exploring Neuromodulation for Dynamic Learning](https://scholarworks.rit.edu/theses/10156/)***
+## Neuromodulation for dynamic few-shot learning
 
+
+
+This repo contains the source code related to the modulatory trace learning rules introduced 
+in the paper titled - ***[Exploring Neuromodulation for Dynamic Learning](https://www.frontiersin.org/articles/10.3389/fnins.2020.00928/full)***
+The dynamic learning rules enable the network to modulate the output layer weights based on the context derived from the internal state of the system.
 This will also consist of the log files consisting of the trained model weights being used.
 The results can be obtained by following this command
 
-`python3 omniglot.py`
+`python3 omniglot.py --nbclasses 5  --nbiter 5000000 --rule mod --activ tanh --steplr 1000000 --nbshots 5 --gamma .666  --lr 3e-5 --rngseed 3`
 
 The different configurations to average over multiple runs can be performaed by running 
 `./run_allscripts.sh`
