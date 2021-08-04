@@ -7,7 +7,17 @@ The results can be obtained by following this command
 
 `python3 omniglot.py`
 
+The different configurations to average over multiple runs can be performaed by running 
+`./run_allscripts.sh`
 
+A hardware emulated version of the code to evaluate the model performance on variable fixed point precision can be tested by running the following commnad
+
+```python
+python3 hardware_emulated/omniglot_test_hardware.py
+```
+
+The dependencies can be installed by 
+`pip install -r requirements.txt`
 
 ### Acknowledgements
 
