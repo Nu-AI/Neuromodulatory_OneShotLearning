@@ -168,7 +168,7 @@ statsmodels==0.11.1
 tabula-py==2.2.0
 tempdir==0.7.1
 tensorboard==2.1.0
-tensorflow==2.5.1
+tensorflow==2.6.4
 tensorflow-datasets==4.3.0
 tensorflow-estimator==2.1.0
 tensorflow-metadata==1.1.0
