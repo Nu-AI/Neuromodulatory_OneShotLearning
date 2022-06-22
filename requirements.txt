@@ -97,7 +97,7 @@ nbformat==5.0.6
 networkx==2.4
 nibabel==3.2.1
 notebook==6.4.1
-numpy==1.18.4
+numpy==1.22.0
 numpy-indexed==0.3.5
 oauthlib==3.1.0
 olefile==0.46
